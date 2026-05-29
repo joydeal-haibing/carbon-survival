@@ -1,0 +1,3114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="碳世求生">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" content="#0a120a">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
+<title>碳世求生 - 末世植树生存</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  background:#050a05;color:#e0f0e0;
+  min-height:100vh;min-height:100dvh;
+  display:flex;justify-content:center;align-items:center;padding:6px;
+  -webkit-touch-callout:none;-webkit-user-select:none;user-select:none;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;overflow-x:hidden;
+  /* 防止微信下拉刷新 */
+  overscroll-behavior:none;-webkit-overflow-scrolling:touch
+}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:#0a120a}
+::-webkit-scrollbar-thumb{background:#2d5a27;border-radius:3px}
+
+/* 主容器 */
+#game{
+  max-width:960px;width:100%;min-height:90vh;
+  background:#0a120a;border:1px solid #1a2e1a;border-radius:14px;
+  display:flex;flex-direction:column;overflow:hidden;
+  box-shadow:0 0 50px rgba(0,20,0,0.5)
+}
+
+/* 顶栏 */
+.header{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:10px 18px;background:#0c1a0c;border-bottom:1px solid #1a2e1a;
+  flex-shrink:0
+}
+.header h1{
+  font-size:16px;font-weight:700;
+  background:linear-gradient(90deg,#4ade80,#22c55e);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:1px
+}
+.header h1 span{font-weight:300;opacity:0.6;font-size:11px;-webkit-text-fill-color:#8ab88a}
+.header-right{display:flex;align-items:center;gap:8px}
+.header-right .clock{font-size:11px;color:#4ade80;font-variant-numeric:tabular-nums}
+.day-display{
+  background:#1a2e1a;padding:3px 12px;border-radius:20px;
+  font-size:13px;font-weight:600;color:#4ade80;border:1px solid #2d5a27;letter-spacing:1px
+}
+.backpack-btn{
+  background:#1a2e1a;border:1px solid #2d5a27;border-radius:8px;
+  color:#e0f0e0;cursor:pointer;padding:5px 12px;
+  font-size:14px;font-family:inherit;font-weight:600;
+  transition:all 0.2s;position:relative
+}
+.backpack-btn:hover{background:#1e3a1e;border-color:#4ade80}
+.backpack-btn .badge{
+  position:absolute;top:-5px;right:-5px;
+  background:#ef4444;color:#fff;font-size:9px;
+  min-width:16px;height:16px;border-radius:8px;
+  display:none;align-items:center;justify-content:center;font-weight:700
+}
+.backpack-btn .badge.show{display:flex}
+
+/* 主体左右分栏 */
+.main-body{display:flex;flex:1;min-height:0}
+
+/* 左侧场景 */
+.scene-panel{flex:0 0 40%;min-width:240px;background:#080e08;border-right:1px solid #1a2e1a;position:relative;overflow:hidden}
+.scene-panel canvas{display:block;width:100%;height:100%}
+.scene-overlay{
+  position:absolute;bottom:8px;left:50%;transform:translateX(-50%);
+  font-size:11px;color:rgba(255,255,255,0.35);pointer-events:none;
+  text-shadow:0 1px 4px rgba(0,0,0,0.8);white-space:nowrap
+}
+
+/* 右侧面板 */
+.ui-panel{flex:1;display:flex;flex-direction:column;gap:8px;padding:12px 16px;overflow-y:auto;min-width:0}
+
+/* 天气 + 状态指示 */
+.weather-bar{
+  display:flex;align-items:center;gap:8px;
+  background:#0f1f0f;border:1px solid #1e3a1e;border-radius:8px;
+  padding:5px 12px;font-size:12px;flex-shrink:0
+}
+.weather-bar .wicon{font-size:18px}
+.weather-bar .wname{color:#8ab88a}
+.weather-bar .wmod{color:#6aae6a;font-size:11px}
+.weather-bar .status-tag{
+  margin-left:auto;padding:2px 10px;border-radius:6px;font-size:11px;font-weight:600
+}
+.status-tag.heatstroke{background:#5a1a1a;color:#ff6b35;border:1px solid #8a3a2a}
+.status-tag.cold{background:#1a2a4a;color:#6ab0ff;border:1px solid #2a4a6a}
+.status-tag.ok{background:#1a2e1a;color:#4ade80;border:1px solid #2d5a27}
+
+/* 碳汇 */
+.carbon-area{
+  display:flex;align-items:center;justify-content:space-between;
+  background:#0f1f0f;border:1px solid #1e3a1e;border-radius:8px;padding:8px 14px;flex-shrink:0
+}
+.carbon-main{display:flex;align-items:baseline;gap:6px}
+.carbon-main .icon{font-size:20px}
+.carbon-main .value{font-size:26px;font-weight:700;color:#4ade80;font-variant-numeric:tabular-nums}
+.carbon-main .value .decimal{font-size:16px;color:#6aae6a}
+.carbon-main .label{font-size:12px;color:#8ab88a}
+.carbon-rate{font-size:12px;color:#6aae6a;background:#0a160a;padding:3px 10px;border-radius:16px;border:1px solid #1e3a1e}
+
+/* 状态条 */
+.stats-row{display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0}
+.stat-item{flex:1;min-width:90px;display:flex;align-items:center;gap:5px;background:#0f1a0f;border:1px solid #1a2e1a;border-radius:7px;padding:5px 8px;font-size:12px}
+.stat-item .sicon{font-size:14px}
+.stat-item .sinner{flex:1;min-width:0}
+.stat-item .sbar{height:4px;background:#1a2e1a;border-radius:2px;overflow:hidden;margin-top:1px}
+.stat-item .sbar .fill{height:100%;border-radius:2px;transition:width 0.4s ease,background 0.3s;background:#4ade80}
+.stat-item .sbar .fill.danger{background:#ef4444}
+.stat-item .sbar .fill.warning{background:#f59e0b}
+.stat-item .sbar .fill.critical{background:#ef4444;animation:pulse 0.8s infinite}
+@keyframes pulse{50%{opacity:0.4}}
+.stat-item .sval{font-weight:600;font-size:11px;min-width:20px;text-align:right}
+
+/* ===== 震屏动画 ===== */
+@keyframes screenShake{
+  0%{transform:translate(0,0)}
+  10%{transform:translate(-4px,3px)}
+  20%{transform:translate(3px,-4px)}
+  30%{transform:translate(-3px,2px)}
+  40%{transform:translate(4px,-2px)}
+  50%{transform:translate(-2px,4px)}
+  60%{transform:translate(2px,-3px)}
+  70%{transform:translate(-4px,-1px)}
+  80%{transform:translate(1px,3px)}
+  90%{transform:translate(-1px,-2px)}
+  100%{transform:translate(0,0)}
+}
+#game.shake{animation:screenShake 0.35s ease}
+
+/* ===== 健康下降闪烁 ===== */
+@keyframes healthFlash{
+  0%{background:#ef4444;box-shadow:0 0 20px rgba(239,68,68,0.5)}
+  50%{background:#ef4444;box-shadow:0 0 30px rgba(239,68,68,0.8)}
+  100%{background:transparent;box-shadow:none}
+}
+.stat-item.flash-health{animation:healthFlash 0.3s ease 2}
+
+/* ===== 住所预览卡片 ===== */
+.shelter-preview{
+  display:flex;gap:12px;align-items:center;margin-bottom:12px;
+  background:#0a160a;border:1px solid #1e3a1e;border-radius:10px;padding:12px 16px;
+}
+.shelter-preview .sp-visual{
+  width:80px;height:80px;border-radius:8px;
+  background:#080e08;border:1px solid #1a2e1a;
+  display:flex;align-items:center;justify-content:center;
+  font-size:40px;flex-shrink:0;
+  transition:all 0.3s;
+}
+.shelter-preview .sp-info{flex:1;}
+.shelter-preview .sp-name{font-size:15px;font-weight:700;color:#4ade80;}
+.shelter-preview .sp-desc{font-size:11px;color:#8ab88a;margin-top:2px;line-height:1.5;}
+.shelter-preview .sp-stats{display:flex;gap:8px;margin-top:6px;}
+.shelter-preview .sp-stat{
+  background:#142114;border:1px solid #1e3a1e;border-radius:5px;
+  padding:2px 8px;font-size:10px;color:#a8d5a2;
+}
+
+/* ===== 生长阶段 ===== */
+@keyframes growPulse{
+  0%{transform:scale(1);filter:brightness(1)}
+  50%{transform:scale(1.08);filter:brightness(1.3)}
+  100%{transform:scale(1);filter:brightness(1)}
+}
+.tree.sprout{opacity:0.4;font-size:12px;}
+.tree.growing1{opacity:0.55;font-size:13px;}
+.tree.growing2{opacity:0.75;font-size:14px;}
+.tree.mature{filter:drop-shadow(0 0 2px rgba(74,222,128,0.25));font-size:16px;}
+.tree.mature.pulse{animation:growPulse 1.5s ease infinite;}
+.tree.planted{animation:treePlantAnim 0.45s ease forwards;}
+.tree.planted-delay-1{animation:treePlantAnim 0.45s ease 0.08s forwards;}
+.tree.planted-delay-2{animation:treePlantAnim 0.45s ease 0.16s forwards;}
+.tree.planted-delay-3{animation:treePlantAnim 0.45s ease 0.24s forwards;}
+
+/* ===== 天气过渡动画 ===== */
+.weather-bar.transition .wicon{animation:weatherSpin 0.5s ease}
+@keyframes weatherSpin{
+  0%{transform:scale(0.5) rotate(-30deg);opacity:0}
+  50%{transform:scale(1.2) rotate(10deg);opacity:1}
+  100%{transform:scale(1) rotate(0deg);opacity:1}
+}
+
+/* ===== 住所购买成功动画 ===== */
+@keyframes shelterBuild{
+  0%{transform:scale(0) translateY(30px);opacity:0}
+  40%{transform:scale(1.1) translateY(-5px);opacity:1}
+  70%{transform:scale(0.95) translateY(2px)}
+  100%{transform:scale(1) translateY(0);opacity:1}
+}
+.shelter-built .sp-visual{animation:shelterBuild 0.6s ease forwards;}
+
+/* ===== 野兽脚印 ===== */
+@keyframes footprint{
+  0%{opacity:0.8;transform:scale(1) translateY(0)}
+  100%{opacity:0;transform:scale(0.5) translateY(20px)}
+}
+.footprint{
+  position:fixed;pointer-events:none;z-index:49;
+  font-size:18px;animation:footprint 0.8s ease forwards;
+}
+
+/* 行动 */
+.actions-row{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;flex-shrink:0}
+.act-btn{
+  padding:10px 4px;border:1px solid #2d5a27;border-radius:8px;
+  background:#142114;color:#c8e8c8;font-size:12px;font-weight:600;
+  cursor:pointer;transition:all 0.2s;text-align:center;
+  font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:1px;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+  min-height:50px;justify-content:center
+}
+.act-btn .icon{font-size:18px}
+.act-btn .sub{font-size:9px;font-weight:400;color:#8ab88a}
+.act-btn:hover{background:#1a301a;border-color:#4ade80;transform:translateY(-1px)}
+.act-btn:active{background:#1e3a1e;transform:scale(0.96)}
+.act-btn:disabled{opacity:0.35;cursor:not-allowed;transform:none}
+.act-btn.primary{background:#1a3a1a;border-color:#4ade80;color:#4ade80}
+.act-btn.primary:hover{background:#1e4a1e}
+
+/* 信息标签 */
+.info-row{display:flex;gap:5px;flex-wrap:wrap;flex-shrink:0}
+.info-tag{background:#0f1a0f;border:1px solid #1a2e1a;border-radius:5px;padding:2px 8px;font-size:10px;color:#8ab88a}
+
+/* 森林 */
+.forest-panel{background:#0f1a0f;border:1px solid #1a2e1a;border-radius:8px;padding:8px 12px;flex-shrink:0}
+.forest-panel .ftitle{font-size:11px;color:#8ab88a;margin-bottom:4px;display:flex;justify-content:space-between}
+.forest-grid{display:flex;flex-wrap:wrap;gap:2px;min-height:26px;align-items:flex-end}
+.forest-grid .tree{font-size:16px;line-height:1;cursor:default}
+.forest-grid .tree.sprout{opacity:0.4;font-size:12px}
+.forest-grid .tree.growing{opacity:0.7}
+.forest-grid .tree.mature{filter:drop-shadow(0 0 2px rgba(74,222,128,0.2))}
+@keyframes treePlantAnim{
+  0%{transform:scale(0) translateY(10px);opacity:0}
+  50%{transform:scale(1.2) translateY(-2px);opacity:1}
+  70%{transform:scale(0.85) translateY(1px)}
+  100%{transform:scale(1) translateY(0);opacity:1}
+}
+.tree-plant-fx{animation:treePlantAnim 0.45s ease forwards}
+@keyframes treeDestroyAnim{
+  0%{transform:scale(1);opacity:1}
+  30%{transform:scale(1.1) rotate(6deg)}
+  100%{transform:scale(0) rotate(-20deg);opacity:0}
+}
+.tree-destroy-fx{animation:treeDestroyAnim 0.4s ease forwards}
+.forest-info{display:flex;gap:12px;margin-top:4px;font-size:10px;color:#6a8a6a}
+
+/* 目标进度条 */
+.goal-panel{background:#0f1a0f;border:1px solid #1a2e1a;border-radius:8px;padding:6px 10px;flex-shrink:0}
+.goal-header{font-size:10px;color:#8ab88a;display:flex;justify-content:space-between;margin-bottom:3px}
+.goal-bar-wrapper{height:5px;background:#0a120a;border-radius:3px;overflow:hidden;margin-bottom:2px}
+.goal-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#4ade80,#22c55e);transition:width 0.5s ease}
+.goal-metrics{display:flex;gap:10px;font-size:10px;color:#6a8a6a;flex-wrap:wrap}
+.goal-metrics .gm-item{display:flex;align-items:center;gap:2px}
+.goal-metrics .gm-val{color:#4ade80;font-weight:600}
+.goal-metrics .gm-target{color:#5a7a5a}
+
+/* 日志 */
+.log-panel{background:#0a120a;border:1px solid #1a2e1a;border-radius:7px;padding:6px 10px;max-height:70px;overflow-y:auto;flex-shrink:0}
+.log-panel .ltitle{font-size:10px;color:#4a6a4a;margin-bottom:1px}
+.log-entry{font-size:11px;padding:1px 0;color:#b8d8b8}
+.log-entry::before{content:'> ';color:#4ade80}
+.log-entry.event{color:#f59e0b}
+.log-entry.event::before{content:'⚡ ';color:#f59e0b}
+.log-entry.danger{color:#ef4444}
+.log-entry.danger::before{content:'!! ';color:#ef4444}
+.log-entry.success{color:#4ade80}
+.log-entry.success::before{content:'✔ ';color:#4ade80}
+.log-entry.beast{color:#ff6b35}
+.log-entry.beast::before{content:'🐾 ';color:#ff6b35}
+
+/* 弹窗 */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:100;justify-content:center;align-items:center}
+.modal-overlay.open{display:flex}
+.modal{background:#0f1a0f;border:1px solid #2d5a27;border-radius:12px;padding:18px;max-width:500px;width:92%;max-height:76vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.8);animation:modalIn 0.25s ease}
+@keyframes modalIn{from{opacity:0;transform:scale(0.95) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #1e3a1e}
+.modal-header h2{font-size:16px;color:#4ade80}
+.modal-close{background:none;border:none;color:#8ab88a;font-size:20px;cursor:pointer;padding:0 4px}
+.modal-close:hover{color:#ef4444}
+.category-tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;margin-bottom:10px}
+.cat-tab{padding:5px 2px;border:1px solid #1e3a1e;border-radius:6px;background:#142114;color:#8ab88a;cursor:pointer;text-align:center;font-size:10px;font-weight:600;transition:all 0.2s;font-family:inherit}
+.cat-tab:hover{border-color:#2d5a27;color:#c8e8c8}
+.cat-tab.active{border-color:#4ade80;color:#4ade80;background:#1a301a}
+.cat-tab .icon{display:block;font-size:14px;margin-bottom:1px}
+.items-list{display:flex;flex-direction:column;gap:5px}
+.item-card{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#142114;border:1px solid #1e3a1e;border-radius:7px;transition:all 0.2s}
+.item-card:hover{border-color:#2d5a27;background:#182618}
+.item-card .name{font-weight:600;font-size:12px;color:#e0f0e0}
+.item-card .name .tier{display:inline-block;font-size:9px;padding:0 5px;border-radius:5px;background:#1a2e1a;color:#4ade80;margin-left:3px}
+.item-card .effects{font-size:10px;color:#8ab88a;margin-top:1px}
+.item-card .buy-area{display:flex;align-items:center;gap:6px}
+.item-card .cost{font-size:11px;color:#f59e0b;font-weight:600;white-space:nowrap}
+.item-card .cost .num{color:#4ade80}
+.buy-btn{padding:4px 12px;border:1px solid #2d5a27;border-radius:6px;background:#1a3a1a;color:#4ade80;font-weight:600;font-size:11px;cursor:pointer;transition:all 0.2s;font-family:inherit}
+.buy-btn:hover{background:#1e4a1e;border-color:#4ade80}
+.buy-btn:disabled{opacity:0.3;cursor:not-allowed}
+.buy-btn.owned{background:#1a2e1a;color:#8ab88a;border-color:#1e3a1e;cursor:default}
+
+/* 背包 */
+.bp-empty{text-align:center;padding:24px 16px;color:#5a8a5a;font-size:12px}
+.bp-empty .big-icon{font-size:36px;display:block;margin-bottom:8px}
+.bp-section{margin-bottom:10px}
+.bp-section h3{font-size:12px;color:#8ab88a;margin-bottom:4px;padding-bottom:2px;border-bottom:1px solid #1a2e1a}
+.bp-item{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;background:#142114;border:1px solid #1e3a1e;border-radius:6px;margin-bottom:3px}
+.bp-item .iname{font-size:12px;font-weight:600}
+.bp-item .ieffects{font-size:9px;color:#8ab88a}
+.bp-item .iright{display:flex;align-items:center;gap:6px}
+.bp-item .iqty{font-size:11px;color:#a8d5a2;min-width:18px;text-align:center}
+.use-btn{padding:3px 10px;border:1px solid #4ade80;border-radius:6px;background:#1a3a1a;color:#4ade80;font-weight:600;font-size:10px;cursor:pointer;transition:all 0.2s;font-family:inherit}
+.use-btn:hover{background:#1e4a1e}
+
+/* Game Over / Victory */
+.go-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:200;justify-content:center;align-items:center}
+.go-overlay.open{display:flex}
+.go-box{text-align:center;max-width:400px;padding:32px 28px;border:1px solid #2d5a27;border-radius:12px;background:#0f1a0f;box-shadow:0 0 50px rgba(0,20,0,0.5);animation:modalIn 0.4s ease}
+.go-box h2{font-size:24px;color:#ef4444;margin-bottom:4px}
+.go-box.victory h2{color:#4ade80}
+.go-box .sub{font-size:14px;color:#8ab88a;margin-bottom:12px}
+.go-box .stats{font-size:12px;color:#b8d8b8;line-height:2}
+.go-box .stats span{color:#4ade80;font-weight:700}
+.restart-btn{margin-top:16px;padding:8px 32px;border:2px solid #4ade80;border-radius:8px;background:#1a3a1a;color:#4ade80;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.3s;font-family:inherit}
+.restart-btn:hover{background:#1e4a1e;box-shadow:0 0 25px rgba(74,222,128,0.15);transform:scale(1.02)}
+
+/* Toast */
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-80px);background:#1a3a1a;border:1px solid #4ade80;border-radius:8px;padding:10px 20px;color:#e0f0e0;font-size:12px;font-weight:600;z-index:300;opacity:0;transition:all 0.4s ease;pointer-events:none;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,0.5)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast .icon{font-size:16px;margin-right:5px}
+
+/* 浮动文字 */
+.floating-text{position:fixed;pointer-events:none;z-index:50;font-weight:700;font-size:16px;white-space:nowrap;animation:floatUp 1s ease forwards}
+@keyframes floatUp{
+  0%{opacity:1;transform:translateY(0) scale(1)}
+  60%{opacity:1;transform:translateY(-35px) scale(1.1)}
+  100%{opacity:0;transform:translateY(-65px) scale(0.8)}
+}
+.floating-text.carbon{color:#4ade80;text-shadow:0 0 8px rgba(74,222,128,0.4)}
+.floating-text.heal{color:#f59e0b;text-shadow:0 0 8px rgba(245,158,11,0.4)}
+
+/* 季节标识 */
+.season-badge{
+  display:inline-flex;align-items:center;gap:3px;margin-left:auto;
+  padding:2px 8px;border-radius:12px;font-size:10px;font-weight:600
+}
+.season-badge.spring{background:#1a2e1a;color:#4ade80;border:1px solid #2d5a27}
+.season-badge.summer{background:#2a1a0a;color:#f59e0b;border:1px solid #4a3a1a}
+.season-badge.autumn{background:#2a1a0a;color:#d4a017;border:1px solid #4a3a1a}
+.season-badge.winter{background:#1a2a3a;color:#6ab0ff;border:1px solid #2a4a6a}
+
+/* 快速使用按钮 */
+.quick-use{
+  background:none;border:1px solid #4ade80;border-radius:4px;
+  color:#4ade80;font-size:10px;cursor:pointer;padding:1px 5px;
+  font-weight:700;font-family:inherit;display:none;
+  animation:quickPulse 1s ease infinite;flex-shrink:0
+}
+.quick-use:hover{background:#4ade80;color:#0a120a}
+@keyframes quickPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(74,222,128,0.3)}
+  50%{box-shadow:0 0 4px 1px rgba(74,222,128,0.5)}
+}
+
+/* 音频开关 */
+.audio-toggle{
+  background:#0f1a0f;border:1px solid #1e3a1e;border-radius:6px;
+  color:#8ab88a;cursor:pointer;padding:2px 6px;font-size:12px;
+  transition:all 0.2s;font-family:inherit;line-height:1
+}
+.audio-toggle:hover{border-color:#4ade80;color:#4ade80}
+.audio-toggle.muted{opacity:0.5}
+.audio-toggle.muted:hover{opacity:1}
+
+/* 宽屏优化 */
+@media(min-width:1400px){
+  #game{max-width:1200px}
+  .scene-panel{flex:0 0 45%}
+}
+/* ===== 标题画面 ===== */
+.title-overlay{
+  position:fixed;inset:0;z-index:500;
+  background:linear-gradient(180deg,#050a05 0%,#0a1a0a 50%,#050a05 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  animation:titleFadeIn 1s ease
+}
+@keyframes titleFadeIn{from{opacity:0}to{opacity:1}}
+.title-overlay.hidden{display:none}
+.title-logo{
+  font-size:48px;line-height:1;margin-bottom:8px;
+  animation:titleFloat 3s ease-in-out infinite
+}
+@keyframes titleFloat{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-8px)}
+}
+.title-overlay h1{
+  font-size:32px;font-weight:800;
+  background:linear-gradient(90deg,#4ade80,#22c55e,#4ade80);
+  background-size:200% auto;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  animation:shimmer 3s ease infinite;
+  letter-spacing:4px;margin-bottom:6px
+}
+@keyframes shimmer{50%{background-position:200% center}}
+.title-sub{font-size:13px;color:#8ab88a;margin-bottom:20px;letter-spacing:2px;text-align:center;line-height:1.6}
+.title-story{
+  max-width:420px;text-align:center;font-size:11px;color:#6a9a6a;line-height:1.8;
+  margin-bottom:20px;padding:12px 16px;background:#0a160a;border:1px solid #1a2e1a;border-radius:8px
+}
+.title-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.title-btn{
+  padding:10px 28px;border-radius:8px;font-size:14px;font-weight:700;
+  cursor:pointer;transition:all 0.3s;font-family:inherit;border:2px solid #2d5a27;
+  background:#142114;color:#e0f0e0
+}
+.title-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(74,222,128,0.15)}
+.title-btn.primary{background:#1a3a1a;border-color:#4ade80;color:#4ade80}
+.title-btn.primary:hover{background:#1e4a1e}
+.title-btn:disabled{opacity:0.3;cursor:not-allowed;transform:none}
+.title-save-info{font-size:10px;color:#5a7a5a;margin-top:10px}
+
+/* ===== 角色选择 ===== */
+.char-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.char-card{
+  background:#0a160a;border:1px solid #1a2e1a;border-radius:8px;
+  padding:10px;text-align:center;cursor:pointer;transition:all 0.2s
+}
+.char-card:hover{border-color:#2d5a27;background:#0f1f0f}
+.char-card.selected{border-color:#4ade80;background:#1a301a;box-shadow:0 0 12px rgba(74,222,128,0.15)}
+.char-card .cicon{font-size:28px;display:block;margin-bottom:4px}
+.char-card .cname{font-size:12px;font-weight:700;color:#e0f0e0}
+.char-card .cdesc{font-size:9px;color:#8ab88a;margin-top:2px;line-height:1.4}
+.char-card .cbuff{font-size:9px;color:#4ade80;margin-top:2px}
+
+/* ===== 教程 ===== */
+.tut-overlay{
+  position:fixed;inset:0;z-index:150;
+  background:rgba(0,0,0,0.6);display:none;justify-content:center;align-items:flex-end;
+  padding-bottom:40px
+}
+.tut-overlay.open{display:flex}
+.tut-box{
+  max-width:440px;width:90%;background:#0f1a0f;border:1px solid #4ade80;
+  border-radius:10px;padding:16px 20px;box-shadow:0 8px 30px rgba(0,0,0,0.6);
+  animation:tutIn 0.3s ease
+}
+@keyframes tutIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.tut-box .tut-title{font-size:14px;font-weight:700;color:#4ade80;margin-bottom:6px}
+.tut-box .tut-text{font-size:12px;color:#b8d8b8;line-height:1.7;margin-bottom:10px}
+.tut-box .tut-text strong{color:#4ade80}
+.tut-box .tut-nav{display:flex;justify-content:space-between;align-items:center}
+.tut-box .tut-dots{display:flex;gap:4px}
+.tut-box .tut-dot{width:6px;height:6px;border-radius:50%;background:#1e3a1e}
+.tut-box .tut-dot.active{background:#4ade80}
+.tut-btn{padding:5px 16px;border-radius:6px;border:1px solid #4ade80;background:#1a3a1a;color:#4ade80;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit}
+.tut-btn:hover{background:#1e4a1e}
+
+/* ===== 成就展板 ===== */
+.achievement-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}
+.ach-card{
+  display:flex;align-items:center;gap:8px;padding:8px 10px;
+  background:#0a160a;border:1px solid #1a2e1a;border-radius:6px;font-size:11px
+}
+.ach-card.unlocked{border-color:#2d5a27;background:#142114}
+.ach-card.locked{opacity:0.4}
+.ach-card .aicon{font-size:18px}
+.ach-card .ainfo{flex:1}
+.ach-card .aname{font-weight:600;color:#e0f0e0;font-size:11px}
+.ach-card .adesc{font-size:9px;color:#8ab88a}
+.ach-card .abadge{font-size:9px;color:#4ade80}
+
+/* ===== 技能树 ===== */
+.skill-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}
+.skill-card{
+  padding:8px 10px;border:1px solid #1a2e1a;border-radius:6px;font-size:11px;
+  background:#0a160a;cursor:pointer;transition:all 0.2s
+}
+.skill-card:hover:not(.locked){border-color:#2d5a27}
+.skill-card.owned{border-color:#4ade80;background:#1a301a}
+.skill-card.available{border-color:#f59e0b;background:#1a1a0a}
+.skill-card.locked{opacity:0.4;cursor:default}
+.skill-card .sname{font-weight:600;color:#e0f0e0;font-size:11px}
+.skill-card .sdesc{font-size:9px;color:#8ab88a;margin-top:1px;line-height:1.4}
+.skill-card .scost{font-size:9px;color:#f59e0b;margin-top:1px}
+
+/* ===== 选择事件弹窗 ===== */
+.choice-overlay{
+  display:none;position:fixed;inset:0;z-index:180;
+  background:rgba(0,0,0,0.7);justify-content:center;align-items:center
+}
+.choice-overlay.open{display:flex}
+.choice-box{max-width:420px;width:90%;background:#0f1a0f;border:1px solid #2d5a27;border-radius:10px;padding:18px 20px;animation:modalIn 0.3s ease}
+.choice-box .ch-title{font-size:16px;font-weight:700;margin-bottom:4px}
+.choice-box .ch-desc{font-size:12px;color:#b8d8b8;line-height:1.6;margin-bottom:12px}
+.choice-opt{padding:10px 12px;margin-bottom:4px;border:1px solid #1e3a1e;border-radius:6px;cursor:pointer;transition:all 0.2s;background:#142114}
+.choice-opt:hover{border-color:#4ade80;background:#1a301a}
+.choice-opt .co-title{font-weight:600;font-size:12px;color:#e0f0e0}
+.choice-opt .co-desc{font-size:10px;color:#8ab88a;margin-top:2px}
+
+/* ===== 危机警告 ===== */
+.crisis-banner{
+  position:fixed;top:0;left:0;right:0;z-index:160;
+  text-align:center;padding:14px 20px;font-size:16px;font-weight:700;
+  animation:crisisSlide 0.5s ease;pointer-events:none
+}
+.crisis-banner.warning{background:linear-gradient(90deg,transparent,#5a1a1a,transparent);color:#ff6b35}
+.crisis-banner.danger{background:linear-gradient(90deg,transparent,#8a0a0a,transparent);color:#ef4444}
+@keyframes crisisSlide{from{transform:translateY(-100%)}to{transform:translateY(0)}}
+
+/* ===== 速度控制 ===== */
+.speed-btn{
+  background:#0f1a0f;border:1px solid #1e3a1e;border-radius:4px;
+  color:#8ab88a;cursor:pointer;padding:2px 6px;font-size:10px;
+  font-family:inherit;font-weight:600;transition:all 0.2s;line-height:1
+}
+.speed-btn:hover{border-color:#4ade80;color:#4ade80}
+.speed-btn.active{background:#1a3a1a;border-color:#4ade80;color:#4ade80}
+
+/* ===== 昼夜指示器 ===== */
+.daynight-indicator{
+  font-size:10px;padding:1px 6px;border-radius:4px;color:#8ab88a
+}
+.daynight-indicator.day{color:#f59e0b}
+.daynight-indicator.night{color:#6ab0ff}
+
+/* ===== 全屏按钮 ===== */
+.fs-btn{
+  background:none;border:none;color:#5a8a5a;cursor:pointer;
+  font-size:14px;padding:2px;line-height:1;transition:color 0.2s
+}
+.fs-btn:hover{color:#4ade80}
+
+/* ===== 成就按钮 ===== */
+.achieve-btn{
+  background:#0f1a0f;border:1px solid #1e3a1e;border-radius:6px;
+  color:#8ab88a;cursor:pointer;padding:3px 8px;font-size:11px;
+  transition:all 0.2s;font-family:inherit;font-weight:600
+}
+.achieve-btn:hover{border-color:#b8860b;color:#d4a017}
+
+/* ===== 技能按钮 ===== */
+.skill-btn{
+  background:#0f1a0f;border:1px solid #1e3a1e;border-radius:6px;
+  color:#8ab88a;cursor:pointer;padding:3px 8px;font-size:11px;
+  transition:all 0.2s;font-family:inherit;font-weight:600
+}
+.skill-btn:hover{border-color:#4ade80;color:#4ade80}
+
+/* 工具提示 (CSS Tooltip) */
+[tooltip]{
+  position:relative;cursor:help
+}
+[tooltip]:hover::after{
+  content:attr(tooltip);position:absolute;bottom:calc(100%+4px);left:50%;transform:translateX(-50%);
+  background:#1a2e1a;color:#e0f0e0;font-size:10px;padding:4px 8px;border-radius:4px;
+  white-space:nowrap;z-index:50;border:1px solid #2d5a27;pointer-events:none
+}
+
+/* 详细统计面板 */
+.stats-detail{margin-top:10px;border-top:1px solid #1e3a1e;padding-top:8px;font-size:11px;color:#8ab88a;line-height:1.8;text-align:left}
+.stats-detail .sd-row{display:flex;justify-content:space-between}
+.stats-detail .sd-val{color:#4ade80;font-weight:600}
+
+/* 响应式 */
+@media(max-width:700px){
+  .main-body{flex-direction:column}
+  .scene-panel{flex:0 0 180px;min-width:0;border-right:none;border-bottom:1px solid #1a2e1a}
+  .ui-panel{padding:8px 10px}
+  .actions-row{grid-template-columns:repeat(2,1fr)}
+  .header h1 span{display:none}
+  .carbon-main .value{font-size:22px}
+  .char-grid{grid-template-columns:repeat(3,1fr)}
+  .achievement-grid,.skill-grid{grid-template-columns:1fr}
+}
+@media(max-width:400px){
+  .title-overlay h1{font-size:22px}
+  .title-logo{font-size:32px}
+  .title-story{font-size:10px;padding:8px 10px}
+  .header h1{font-size:13px}
+  .day-display{font-size:11px;padding:2px 8px}
+  .category-tabs{grid-template-columns:repeat(5,1fr);gap:2px}
+  .cat-tab{font-size:8px;padding:4px 1px}
+  .cat-tab .icon{font-size:12px}
+  .carbon-main .value{font-size:18px}
+  .stat-item{font-size:10px;padding:4px 5px}
+  .actions-row{gap:3px}
+  .act-btn{padding:8px 2px;font-size:10px;min-height:44px}
+  .act-btn .icon{font-size:16px}
+  .act-btn .sub{font-size:8px}
+  .scene-panel{flex:0 0 150px}
+  .modal{max-height:80vh;padding:12px}
+  .item-card{padding:6px 8px}
+  .achievement-grid,.skill-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div id="toast" class="toast"><span class="icon"></span><span class="msg"></span></div>
+
+<!-- ===== 标题画面 ===== -->
+<div class="title-overlay" id="titleScreen">
+  <div class="title-logo">🌍</div>
+  <h1>碳 世 求 生</h1>
+  <div class="title-sub">末世植树生存 · 直到大地复苏</div>
+  <div class="title-story">
+    <div style="margin-bottom:8px;">—— 2147年 ——</div>
+    地球生态崩溃，大气破洞，土地荒漠化。<br>
+    最后的幸存者发现——<strong>植树</strong>是唯一的出路。<br>
+    每一棵树产生的碳汇，成为末世硬通货。<br>
+    <span style="color:#4ade80;">活下去，种下去，守护住。</span>
+  </div>
+  <!-- 角色选择 -->
+  <div id="charSelectArea">
+    <div style="font-size:12px;color:#8ab88a;margin-bottom:8px;text-align:center;">🎭 选择你的身份</div>
+    <div class="char-grid" id="charGrid"></div>
+  </div>
+  <div class="title-btns" id="titleBtnsArea">
+    <button class="title-btn primary" id="titleStartBtn" onclick="startNewGame()">🌱 开始末世生存</button>
+    <button class="title-btn" id="titleLoadBtn" onclick="loadSavedGame()" style="display:none;">📂 继续上次冒险</button>
+    <button class="title-btn" onclick="document.getElementById('titleScreen').classList.add('hidden');initGame();" style="font-size:11px;">跳过 ></button>
+  </div>
+  <div class="title-save-info" id="titleSaveInfo"></div>
+</div>
+
+<!-- ===== 危机横幅（动态创建） ===== -->
+<div id="crisisBanner" class="crisis-banner" style="display:none;"></div>
+
+<div id="game">
+  <!-- 顶栏 -->
+  <div class="header">
+    <h1>🌍 碳世求生 <span>· 末世植树生存</span></h1>
+    <div class="header-right">
+      <span class="clock" id="realtimeClock">00:00</span>
+      <span class="daynight-indicator" id="daynightInd">☀️</span>
+      <button class="speed-btn" id="speedBtn" onclick="cycleSpeed()" title="游戏速度">1×</button>
+      <button class="fs-btn" id="fsBtn" onclick="toggleFullscreen()" title="全屏">⛶</button>
+      <button class="achieve-btn" onclick="openAchievements()" title="成就">🏆</button>
+      <button class="audio-toggle" id="audioToggle" onclick="toggleAudio()" title="音效">🔊</button>
+      <button class="backpack-btn" onclick="openBackpack()" id="backpackBtn">
+        🎒<span class="badge" id="backpackBadge">0</span>
+      </button>
+      <div class="day-display">DAY <span id="dayNum">01</span> <span style="font-size:10px;opacity:0.5;" id="dayGoal">/100</span></div>
+    </div>
+  </div>
+
+  <!-- 主体 -->
+  <div class="main-body">
+    <!-- 左侧场景 -->
+    <div class="scene-panel">
+      <canvas id="sceneCanvas"></canvas>
+      <div class="scene-overlay" id="sceneOverlay">🌱 末世生存</div>
+    </div>
+    <!-- 右侧界面 -->
+    <div class="ui-panel" id="uiPanel">
+      <!-- 天气 + 状态 -->
+      <div class="weather-bar" id="weatherBar">
+        <span class="wicon" id="weatherIcon">☀️</span>
+        <span class="wname" id="weatherName">晴天</span>
+        <span class="wmod" id="weatherMod">±0°C</span>
+        <span class="season-badge spring" id="seasonBadge">🌸 春季</span>
+        <span class="status-tag ok" id="statusTag">✓ 健康</span>
+      </div>
+      <!-- 碳汇 -->
+      <div class="carbon-area">
+        <div class="carbon-main">
+          <span class="icon">⚡</span>
+          <span class="value" id="carbonDisplay">15</span>
+          <span class="label">碳汇</span>
+        </div>
+        <div class="carbon-rate" id="carbonRate">+0.0/秒</div>
+      </div>
+      <!-- 状态 -->
+      <div class="stats-row">
+        <div class="stat-item">
+          <span class="sicon">🍖</span>
+          <div class="sinner">
+            <div style="display:flex;justify-content:space-between;font-size:10px;"><span>饱食</span><span class="sval" id="hungerVal">70</span></div>
+            <div class="sbar"><div class="fill" id="hungerBar" style="width:70%"></div></div>
+          </div>
+          <button class="quick-use" id="quickFood" onclick="quickUse('food')" title="快速进食">⚡</button>
+        </div>
+        <div class="stat-item">
+          <span class="sicon">🌡️</span>
+          <div class="sinner">
+            <div style="display:flex;justify-content:space-between;font-size:10px;"><span>体温</span><span class="sval" id="tempVal">50</span></div>
+            <div class="sbar"><div class="fill" id="tempBar" style="width:50%"></div></div>
+          </div>
+          <button class="quick-use" id="quickTemp" onclick="quickUse('medicine')" title="快速用药调节体温">⚡</button>
+        </div>
+        <div class="stat-item">
+          <span class="sicon">❤️</span>
+          <div class="sinner">
+            <div style="display:flex;justify-content:space-between;font-size:10px;"><span>生命</span><span class="sval" id="healthVal">100</span></div>
+            <div class="sbar"><div class="fill" id="healthBar" style="width:100%"></div></div>
+          </div>
+          <button class="quick-use" id="quickMed" onclick="quickUse('medicine')" title="快速用药">⚡</button>
+        </div>
+      </div>
+      <!-- 行动 -->
+      <div class="actions-row">
+        <button class="act-btn primary" onclick="actionPlant()"><span class="icon">🌱</span>植树<span class="sub" id="plantSub">种1棵</span></button>
+        <button class="act-btn" onclick="openBackpack()"><span class="icon">🎒</span>背包<span class="sub" id="backpackSub">物品</span></button>
+        <button class="act-btn" onclick="openExchange()"><span class="icon">🏪</span>兑换<span class="sub">用碳汇</span></button>
+        <button class="act-btn" onclick="actionRest()"><span class="icon">😴</span>休息<span class="sub" id="restSub">恢复生命</span></button>
+      </div>
+      <!-- 信息 -->
+      <div class="info-row">
+        <span class="info-tag" id="shelterTag">🏠 无</span>
+        <span class="info-tag" id="toolTag">🔧 徒手</span>
+        <span class="info-tag" id="protectTag">🛡️ 无</span>
+        <span class="info-tag" id="treeCountTag">🌲 0棵</span>
+        <span class="info-tag" id="incomeTag">⚡+0/秒</span>
+        <button class="skill-btn" onclick="openSkills()" title="技能研究">🔬</button>
+        <button class="skill-btn" onclick="saveGame()" title="手动存档">💾</button>
+      </div>
+      <!-- 森林 -->
+      <div class="forest-panel">
+        <div class="ftitle"><span>🌲 森林</span><span id="forestCounts">🌱0/🌲0</span></div>
+        <div class="forest-grid" id="forestGrid"><span style="color:#4a6a4a;font-size:11px;">🌫️ 荒地</span></div>
+        <div class="forest-info">
+          <span>🌱 生长中: <b id="growingCount">0</b></span>
+          <span>🌲 可产出: <b id="matureCount">0</b></span>
+          <span>📊 总量: <b id="totalCount">0</b></span>
+        </div>
+      </div>
+      <!-- 目标进度 -->
+      <div class="goal-panel">
+        <div class="goal-header">
+          <span>🎯 目标进度</span>
+          <span id="goalPercent">0%</span>
+        </div>
+        <div class="goal-bar-wrapper">
+          <div class="goal-bar-fill" id="goalBar" style="width:0%"></div>
+        </div>
+        <div class="goal-metrics">
+          <span class="gm-item">📅 天数 <span class="gm-val" id="goalDays">1</span><span class="gm-target">/100</span></span>
+          <span class="gm-item">🌲 植树 <span class="gm-val" id="goalTrees">0</span><span class="gm-target">/500</span></span>
+          <span class="gm-item" id="goalLegend" style="color:#b8860b;font-size:9px;"></span>
+          <span class="gm-item" id="goalHint" style="color:#5a8a5a;">🌱 种树或活下去...</span>
+        </div>
+      </div>
+      <!-- 日志 -->
+      <div class="log-panel" id="logPanel">
+        <div class="ltitle">📜 日志</div>
+        <div id="logContainer"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 兑换弹窗 -->
+<div class="modal-overlay" id="exchangeModal">
+  <div class="modal">
+    <div class="modal-header"><h2>🏪 物资兑换</h2><button class="modal-close" onclick="closeExchange()">✕</button></div>
+    <div class="category-tabs" id="categoryTabs">
+      <button class="cat-tab active" data-cat="food" onclick="switchCategory('food')"><span class="icon">🍞</span>食物</button>
+      <button class="cat-tab" data-cat="shelter" onclick="switchCategory('shelter')"><span class="icon">🏠</span>住所</button>
+      <button class="cat-tab" data-cat="medicine" onclick="switchCategory('medicine')"><span class="icon">💊</span>药品</button>
+      <button class="cat-tab" data-cat="tool" onclick="switchCategory('tool')"><span class="icon">🔧</span>工具</button>
+      <button class="cat-tab" data-cat="protection" onclick="switchCategory('protection')"><span class="icon">🛡️</span>防护</button>
+    </div>
+    <div id="itemsContainer" class="items-list"></div>
+    <div style="margin-top:8px;text-align:right;font-size:11px;color:#8ab88a;">
+      ⚡ 当前: <span id="modalCarbon" style="color:#4ade80;font-weight:700;">0</span>
+      <span style="margin-left:8px;color:#5a8a5a;">🎒 消耗品存入背包</span>
+    </div>
+  </div>
+</div>
+
+<!-- 背包弹窗 -->
+<div class="modal-overlay" id="backpackModal">
+  <div class="modal">
+    <div class="modal-header"><h2>🎒 背包</h2><button class="modal-close" onclick="closeBackpack()">✕</button></div>
+    <div id="backpackContent"></div>
+  </div>
+</div>
+
+<!-- 成就弹窗 -->
+<div class="modal-overlay" id="achievementModal">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-header"><h2>🏆 成就展板</h2><button class="modal-close" onclick="closeAchievements()">✕</button></div>
+    <div id="achievementContent"></div>
+  </div>
+</div>
+
+<!-- 技能树弹窗 -->
+<div class="modal-overlay" id="skillModal">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-header"><h2>🔬 技能研究</h2><button class="modal-close" onclick="closeSkills()">✕</button></div>
+    <div style="font-size:11px;color:#8ab88a;margin-bottom:8px;">💡 消耗碳汇解锁永久技能，增强生存能力</div>
+    <div id="skillContent"></div>
+  </div>
+</div>
+
+<!-- 选择事件弹窗 -->
+<div class="choice-overlay" id="choiceModal">
+  <div class="choice-box">
+    <div class="ch-title" id="choiceTitle">📜 发现</div>
+    <div class="ch-desc" id="choiceDesc"></div>
+    <div id="choiceOptions"></div>
+  </div>
+</div>
+
+<!-- 教程弹窗 -->
+<div class="tut-overlay" id="tutOverlay">
+  <div class="tut-box">
+    <div class="tut-title" id="tutTitle">🌱 新手教程</div>
+    <div class="tut-text" id="tutText"></div>
+    <div class="tut-nav">
+      <div class="tut-dots" id="tutDots"></div>
+      <div><button class="tut-btn" id="tutNextBtn" onclick="tutNext()">下一步 →</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- Game Over / Victory -->
+<div class="go-overlay" id="gameoverOverlay">
+  <div class="go-box" id="gameoverBox">
+    <h2 id="goTitle">💀 末世陨落</h2>
+    <div class="sub" id="deathCause">你在末世中倒下了...</div>
+    <div class="stats">
+      存活天数: <span id="finalDays">0</span> / 100<br>
+      种植总数: <span id="finalTrees">0</span> / 500<br>
+      累积碳汇: <span id="finalCarbon">0</span><br>
+      最高工具: <span id="finalTool">徒手</span><br>
+      最高住所: <span id="finalShelter">无</span><br>
+      最高防护: <span id="finalProtect">无</span>
+      <div class="stats-detail" id="statsDetail">
+        <div class="sd-row"><span>🐾 野兽袭击次数</span><span class="sd-val" id="sdBeast">0</span></div>
+        <div class="sd-row"><span>🌲 存活树木（结束时）</span><span class="sd-val" id="sdTrees">0</span></div>
+        <div class="sd-row"><span>🌱 曾达最大森林</span><span class="sd-val" id="sdMaxForest">0</span></div>
+        <div class="sd-row"><span>🔬 技能解锁</span><span class="sd-val" id="sdSkills">0</span></div>
+        <div class="sd-row"><span>🏆 成就获得</span><span class="sd-val" id="sdAch">0</span></div>
+      </div>
+    </div>
+    <button class="restart-btn" onclick="restartGame()">🌱 重新开始</button>
+    <button class="title-btn" onclick="backToTitle()" style="margin-top:8px;font-size:12px;padding:5px 16px;">🏠 返回标题</button>
+  </div>
+</div>
+
+<script>
+// =========================================================
+// 配置
+// =========================================================
+const TOOL_NAMES=['徒手','石制工具','铁制工具','智能种植仪'];
+const TOOL_PLANT=[1,2,4,8];
+const SHELTER_NAMES=['无','简易帐篷','保温木屋','生态恒温舱'];
+const SHELTER_STAB=[0,5,10,20];
+const PROTECT_NAMES=['无','木栅栏','铁围栏','能量护盾'];
+const PROTECT_RATE=[0,0.30,0.55,0.80];
+const CARBON_PER_TREE_PER_MIN=5; // 每棵树每分钟产出碳汇（原3→5）
+const HUNGER_PER_MIN=2;   // 实时饥饿：每分钟下降 2 点
+const TEMP_DRIFT_PER_MIN=1.2; // 体温实时漂移速度
+
+// 天气系统
+const WEATHERS=[
+  {id:'sunny',   name:'晴天',  icon:'☀️', tempMod:0,   desc:'晴朗干燥'},
+  {id:'cloudy',  name:'多云',  icon:'☁️', tempMod:-3,  desc:'云层遮蔽'},
+  {id:'rainy',   name:'雨天',  icon:'🌧️', tempMod:-8,  desc:'阴雨连绵'},
+  {id:'stormy',  name:'暴风雨',icon:'⛈️', tempMod:-14, desc:'狂风暴雨'},
+  {id:'heatwave',name:'热浪',  icon:'🌊', tempMod:16,  desc:'酷热难耐'},
+  {id:'coldwave',name:'寒潮',  icon:'❄️', tempMod:-14, desc:'天寒地冻'},
+];
+
+const ITEMS={
+  food:{name:'🍞 食物',icon:'🍞',items:[
+    {id:'f1',tier:'Ⅰ',name:'粗粮面包',desc:'勉强果腹',effects:{hunger:20,health:5},cost:10},
+    {id:'f2',tier:'Ⅱ',name:'营养餐盒',desc:'均衡营养',effects:{hunger:35,health:10},cost:25},
+    {id:'f3',tier:'Ⅲ',name:'合成美食',desc:'末世佳肴',effects:{hunger:50,health:20},cost:50},
+  ]},
+  shelter:{name:'🏠 住所',icon:'🏠',items:[
+    {id:'s1',tier:'Ⅰ',name:'简易帐篷',desc:'遮风挡雨·生命恢复+2',effects:{tempStab:5,restBonus:2},cost:15,isUpgrade:true,upgradeKey:'shelterLv',upgradeVal:1},
+    {id:'s2',tier:'Ⅱ',name:'保温木屋',desc:'温暖舒适·生命恢复+5',effects:{tempStab:10,restBonus:5},cost:35,isUpgrade:true,upgradeKey:'shelterLv',upgradeVal:2},
+    {id:'s3',tier:'Ⅲ',name:'生态恒温舱',desc:'恒温科技·生命恢复+10',effects:{tempStab:20,restBonus:10},cost:70,isUpgrade:true,upgradeKey:'shelterLv',upgradeVal:3},
+  ]},
+  medicine:{name:'💊 药品',icon:'💊',items:[
+    {id:'m1',tier:'Ⅰ',name:'基础医疗包',desc:'物理保暖·恢复体温',effects:{temperature:25},cost:12},
+    {id:'m2',tier:'Ⅱ',name:'复方感冒药',desc:'强力驱寒·治疗感冒',effects:{temperature:35,cureCold:true},cost:25},
+    {id:'m4',tier:'Ⅱ',name:'金疮药',desc:'止血生肌·恢复生命',effects:{health:40},cost:28},
+    {id:'m3',tier:'Ⅲ',name:'纳米修复剂',desc:'全面调节·治疗中暑与感冒',effects:{temperature:50,cureAll:true},cost:50},
+  ]},
+  tool:{name:'🔧 工具',icon:'🔧',items:[
+    {id:'t1',tier:'Ⅰ',name:'石制工具',desc:'每次种2棵',effects:{plantCount:2},cost:8,isUpgrade:true,upgradeKey:'toolLv',upgradeVal:1},
+    {id:'t2',tier:'Ⅱ',name:'铁制工具',desc:'每次种4棵',effects:{plantCount:4},cost:20,isUpgrade:true,upgradeKey:'toolLv',upgradeVal:2},
+    {id:'t3',tier:'Ⅲ',name:'智能种植仪',desc:'每次种8棵',effects:{plantCount:8},cost:45,isUpgrade:true,upgradeKey:'toolLv',upgradeVal:3},
+  ]},
+  protection:{name:'🛡️ 防护',icon:'🛡️',items:[
+    {id:'p1',tier:'Ⅰ',name:'木栅栏',desc:'减少30%破坏',effects:{protectRate:0.30},cost:15,isUpgrade:true,upgradeKey:'protectionLv',upgradeVal:1},
+    {id:'p2',tier:'Ⅱ',name:'铁围栏',desc:'减少55%破坏',effects:{protectRate:0.55},cost:35,isUpgrade:true,upgradeKey:'protectionLv',upgradeVal:2},
+    {id:'p3',tier:'Ⅲ',name:'能量护盾',desc:'最多减少80%',effects:{protectRate:0.80},cost:65,isUpgrade:true,upgradeKey:'protectionLv',upgradeVal:3},
+  ]}
+};
+
+const BEASTS=[
+  {id:'rats',name:'变异鼠群',icon:'🐀',minD:1,maxD:2},
+  {id:'wolves',name:'荒野狼',icon:'🐺',minD:2,maxD:4},
+  {id:'lizard',name:'巨蜥兽',icon:'🦎',minD:3,maxD:6},
+];
+
+const EVENTS=[
+  {id:'heatwave',icon:'🌊',desc:'热浪席卷！',apply:g=>{const r=[1,0.85,0.65,0.4][g.shelterLv]||1;g.temperature=Math.min(100,g.temperature+15*r);}},
+  {id:'coldwave',icon:'❄️',desc:'寒潮突袭！',apply:g=>{const r=[1,0.85,0.65,0.4][g.shelterLv]||1;g.temperature=Math.max(0,g.temperature-15*r);}},
+  {id:'acidrain',icon:'☣️',desc:'酸雨降落！',apply:g=>{const r=[1,0.85,0.65,0.4][g.shelterLv]||1;g.health=Math.max(0,g.health-8*r);}},
+  {id:'fertile',icon:'🌱',desc:'沃土之息！',apply:g=>{let n=false;g.trees.forEach(t=>{if(!t.mature){t.progress=Math.min(3,t.progress+1);n=true;}});return n;}},
+  {id:'carbonbonus',icon:'💎',desc:'发现碳汇矿脉！',apply:g=>{g.carbon+=10;}},
+];
+
+// 季节系统
+const SEASONS=[
+  {id:'spring',name:'春季',icon:'🌸',desc:'万物复苏',plantBonus:1, carbonBonus:0, beastMod:0.8, tempBias:0, weatherBias:['rainy','cloudy','sunny']},
+  {id:'summer',name:'夏季',icon:'☀️',desc:'酷热炎夏',plantBonus:0, carbonBonus:0.2, beastMod:1.0, tempBias:6, weatherBias:['heatwave','sunny','stormy']},
+  {id:'autumn',name:'秋季',icon:'🍂',desc:'金秋丰收',plantBonus:0, carbonBonus:0.5, beastMod:1.2, tempBias:-2, weatherBias:['cloudy','rainy','coldwave']},
+  {id:'winter',name:'冬季',icon:'❄️',desc:'严寒凛冬',plantBonus:0, carbonBonus:0, beastMod:1.5, tempBias:-8, weatherBias:['coldwave','cloudy','stormy']},
+];
+function getSeason(day){return day<=25?SEASONS[0]:day<=50?SEASONS[1]:day<=75?SEASONS[2]:SEASONS[3];}
+
+// =========================================================
+// 角色职业
+// =========================================================
+const CHARACTERS=[
+  {id:'survivor',name:'幸存者',icon:'🧑',desc:'均衡型，没有特别加成',buff:'无'},
+  {id:'gardener',name:'园丁',icon:'👨‍🌾',desc:'热爱种植，植树效率+1',buff:'每次多种1棵'},
+  {id:'merchant',name:'商人',icon:'🧑‍💼',desc:'精打细算，碳汇价值+20%',buff:'碳汇收入+20%'},
+  {id:'scout',name:'斥候',icon:'🧑‍🏕️',desc:'熟悉荒野，野兽破坏-15%',buff:'减免+15%'},
+  {id:'doctor',name:'医生',icon:'👨‍⚕️',desc:'医术精湛，生命恢复+20%',buff:'治疗效果+20%'},
+];
+
+// =========================================================
+// 技能树
+// =========================================================
+const SKILLS=[
+  {id:'s_save',name:'📦 储备物资',desc:'背包容量+5（可多存应急物资）',cost:20,prereq:[],effect:g=>{g._skillBonus={...g._skillBonus,bpBonus:5};}},
+  {id:'s_roots',name:'🌿 根系加固',desc:'野兽破坏树木再-10%',cost:40,prereq:['s_save'],effect:g=>{g._skillBonus={...g._skillBonus,rootProtect:0.10};}},
+  {id:'s_photo',name:'☀️ 光合强化',desc:'成熟树碳汇产出+25%',cost:50,prereq:['s_save'],effect:g=>{g._skillBonus={...g._skillBonus,photoBonus:0.25};}},
+  {id:'s_hearty',name:'💪 强健体魄',desc:'饱食度下降速度-15%',cost:30,prereq:[],effect:g=>{g._skillBonus={...g._skillBonus,hungerReduce:0.15};}},
+  {id:'s_insulate',name:'🧥 隔热涂层',desc:'体温受天气影响-25%',cost:35,prereq:['s_hearty'],effect:g=>{g._skillBonus={...g._skillBonus,tempResist:0.25};}},
+  {id:'s_regrow',name:'🌱 速生技术',desc:'树木生长速度+1（-1回合成熟）',cost:60,prereq:['s_photo'],effect:g=>{g._skillBonus={...g._skillBonus,growSpeed:1};}},
+  {id:'s_barricade',name:'🛡️ 加固工事',desc:'防护设施效果+10%',cost:45,prereq:['s_roots'],effect:g=>{g._skillBonus={...g._skillBonus,fortify:0.10};}},
+  {id:'s_nanobots',name:'🔬 纳米修复',desc:'每回合自动恢复生命+2',cost:70,prereq:['s_regrow','s_barricade'],effect:g=>{g._skillBonus={...g._skillBonus,nanoHeal:2};}},
+];
+
+// =========================================================
+// 成就列表
+// =========================================================
+const ACHIEVEMENTS=[
+  {id:'_a10',name:'🌱 萌芽',desc:'种植10棵树',icon:'🌱',check:g=>g.totalPlanted>=10},
+  {id:'_a100',name:'🌿 绿洲',desc:'种植100棵树',icon:'🌿',check:g=>g.totalPlanted>=100},
+  {id:'_a500',name:'🌲 森林',desc:'种植500棵树',icon:'🌲',check:g=>g.totalPlanted>=500},
+  {id:'_a200',name:'⚡ 积蓄',desc:'累计200碳汇',icon:'⚡',check:g=>g.totalCarbonEarned>=200},
+  {id:'_aSh',name:'🏠 安家',desc:'获得生态恒温舱',icon:'🏠',check:g=>g.shelterLv>=3},
+  {id:'_aTo',name:'🔧 科技',desc:'获得智能种植仪',icon:'🔧',check:g=>g.toolLv>=3},
+  {id:'_aPr',name:'🛡️ 壁垒',desc:'获得能量护盾',icon:'🛡️',check:g=>g.protectionLv>=3},
+  {id:'_legend',name:'🏆 传奇',desc:'种植1000棵树',icon:'🏆',check:g=>g.totalPlanted>=1000},
+  {id:'_aCrisis',name:'🌊 渡劫',desc:'挺过第一次危机',icon:'🌊',check:g=>g._crisis1},
+  {id:'_aSkill6',name:'🔬 博学',desc:'解锁全部技能',icon:'🔬',check:g=>g.skills&&g.skills.length>=SKILLS.length},
+];
+
+// =========================================================
+// 危机事件
+// =========================================================
+const CRISES=[
+  {day:30,icon:'🌊',name:'酸雨潮',desc:'连日的酸雨侵蚀着你的营地...',effect:g=>{
+    g.health=Math.max(1,g.health-20);
+    const loss=Math.ceil(g.trees.length*0.3);
+    for(let i=0;i<loss&&g.trees.length>0;i++)g.trees.pop();
+    g._crisis1=true;
+    return `${loss}棵树被酸雨摧毁，生命-20`;
+  }},
+  {day:60,icon:'🐾',name:'兽潮',desc:'变异兽群大迁徙经过你的领地...',effect:g=>{
+    const loss=Math.ceil(g.trees.length*0.4);
+    for(let i=0;i<loss&&g.trees.length>0;i++)g.trees.pop();
+    g.health=Math.max(1,g.health-15);
+    return `${loss}棵树被兽群踏平，生命-15`;
+  }},
+  {day:90,icon:'❄️',name:'冰河期',desc:'超级寒潮席卷大地...',effect:g=>{
+    g.temperature=Math.max(0,g.temperature-40);
+    const loss=Math.ceil(g.trees.length*0.2);
+    for(let i=0;i<loss&&g.trees.length>0;i++)g.trees.pop();
+    return `体温骤降40°C，${loss}棵树冻死`;
+  }},
+];
+
+// =========================================================
+// 选择事件
+// =========================================================
+const CHOICE_EVENTS=[
+  {
+    title:'📦 废弃仓库',
+    desc:'你发现了一座废弃的物资仓库，但里面可能很危险...',
+    options:[
+      {text:'🔍 谨慎搜索',desc:'可能发现物资，也可能空手而归',effect:g=>{
+        if(Math.random()<0.6){const v=rand(15,30);g.carbon+=v;return `发现了 ${v} 碳汇！`;}
+        else return '仓库空空如也...';
+      }},
+      {text:'🏃 冒险深入',desc:'收益更高，但可能受伤',effect:g=>{
+        if(Math.random()<0.5){const v=rand(30,60);g.carbon+=v;return `找到大量物资！+${v}碳汇`;}
+        else{g.health=Math.max(1,g.health-15);return '遭遇陷阱，生命-15！';}
+      }},
+      {text:'🚶 离开',desc:'保持谨慎，什么也不做',effect:g=>{return '你选择离开，安全第一。';}},
+    ]
+  },
+  {
+    title:'🌊 污染河流',
+    desc:'一条被污染的河流，但水中似乎还有鱼...',
+    options:[
+      {text:'🎣 尝试捕鱼',desc:'可能获得食物，也可能中毒',effect:g=>{
+        if(Math.random()<0.5){g.backpack.push({id:'fish',name:'烤鱼',tier:'Ⅰ',type:'food',effects:{hunger:30,health:5},icon:'🍞',quantity:1});return '钓到一条鱼！存入背包';}
+        else{g.health=Math.max(1,g.health-10);return '水中有毒，生命-10！';}
+      }},
+      {text:'🧪 取样研究',desc:'花费时间但可能有发现',effect:g=>{
+        g.carbon+=8;return '你采集了水样，获得 8 碳汇报酬。';
+      }},
+    ]
+  },
+  {
+    title:'🌱 流浪商人',
+    desc:'一位流浪商人路过，他愿意交易稀有物资...',
+    options:[
+      {text:'🤝 交换物资',desc:'用20碳汇换取药品',effect:g=>{
+        if(g.carbon>=20){g.carbon-=20;g.backpack.push({id:'med3',name:'纳米修复剂',tier:'Ⅲ',type:'medicine',effects:{health:50,cureAll:true},icon:'💊',quantity:1});return '获得纳米修复剂！';}
+        else return '碳汇不够...';
+      }},
+      {text:'📖 打听情报',desc:'了解前方的路',effect:g=>{
+        return '商人告诉你：再往南走有一个废弃研究所，或许有有用的东西。';
+      }},
+      {text:'🚶 告别',desc:'继续赶路',effect:g=>{return '你继续前行。';}},
+    ]
+  },
+  {
+    title:'🌋 地震',
+    desc:'大地在颤抖！地面裂开了巨大的裂缝...',
+    options:[
+      {text:'🏃 逃离',desc:'立刻逃跑，保证安全',effect:g=>{
+        g.health=Math.max(1,g.health-5);return '你及时逃离，轻微擦伤。';
+      }},
+      {text:'🔍 查看裂缝',desc:'可能发现了什么',effect:g=>{
+        if(Math.random()<0.4){g.carbon+=25;return '裂缝中露出矿脉！+25碳汇';}
+        else{g.health=Math.max(1,g.health-12);return '地面再次塌陷，受伤！';}
+      }},
+    ]
+  },
+];
+// =========================================================
+// 微信浏览器检测
+const isWeChat=/MicroMessenger/i.test(navigator.userAgent||'');
+const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent||'');
+let audioCtx=null, audioEnabled=true, audioSupported=true;
+function getAudioCtx(){
+  if(!audioCtx)try{
+    audioCtx=new(window.AudioContext||window.webkitAudioContext||(()=>{throw new Error('no audio')})())();
+  }catch(e){audioSupported=false;}
+  return audioCtx;
+}
+function toggleAudio(){
+  if(!audioSupported){showToast('🔇','此设备不支持音效');return;}
+  audioEnabled=!audioEnabled;
+  const btn=document.getElementById('audioToggle');
+  if(btn)btn.textContent=audioEnabled?'🔊':'🔇';
+  btn.classList.toggle('muted',!audioEnabled);
+}
+function playSFX(type){
+  if(!audioEnabled||!audioSupported)return;
+  try{
+    const ctx=getAudioCtx();if(!ctx)return;
+    if(ctx.state==='suspended')ctx.resume();
+    const t=ctx.currentTime;
+    const osc=ctx.createOscillator(),gain=ctx.createGain();
+    osc.connect(gain);gain.connect(ctx.destination);
+    const S=(f,t0,dur)=>{osc.frequency.setValueAtTime(f,t0);osc.start(t0);osc.stop(t0+dur);};
+    const G=(v,t0,dur)=>gain.gain.setValueAtTime(v,t0);
+    const end=(t0,dur)=>{gain.gain.setValueAtTime(0.08,t0);gain.gain.exponentialRampToValueAtTime(0.001,t0+dur);};
+    switch(type){
+      case'plant':
+        osc.type='sine';osc.frequency.setValueAtTime(500,t);osc.frequency.exponentialRampToValueAtTime(1000,t+0.08);
+        gain.gain.setValueAtTime(0.06,t);gain.gain.exponentialRampToValueAtTime(0.001,t+0.12);
+        osc.start(t);osc.stop(t+0.15);break;
+      case'carbon':
+        osc.type='sine';osc.frequency.setValueAtTime(800,t);osc.frequency.exponentialRampToValueAtTime(1400,t+0.06);
+        gain.gain.setValueAtTime(0.04,t);gain.gain.exponentialRampToValueAtTime(0.001,t+0.1);
+        osc.start(t);osc.stop(t+0.12);break;
+      case'beast':
+        osc.type='sawtooth';osc.frequency.setValueAtTime(200,t);osc.frequency.exponentialRampToValueAtTime(80,t+0.3);
+        gain.gain.setValueAtTime(0.1,t);gain.gain.exponentialRampToValueAtTime(0.001,t+0.3);
+        osc.start(t);osc.stop(t+0.35);break;
+      case'victory':
+        osc.type='sine';gain.gain.setValueAtTime(0,t);
+        [523,659,784,1047].forEach((f,i)=>{
+          const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);
+          o.type='sine';o.frequency.setValueAtTime(f,t+i*0.15);
+          g.gain.setValueAtTime(0.07,t+i*0.15);g.gain.exponentialRampToValueAtTime(0.001,t+i*0.15+0.25);
+          o.start(t+i*0.15);o.stop(t+i*0.15+0.3);
+        });
+        osc.start(t);osc.stop(t+0.8);break;
+      case'death':
+        osc.type='sine';osc.frequency.setValueAtTime(400,t);osc.frequency.exponentialRampToValueAtTime(100,t+0.5);
+        gain.gain.setValueAtTime(0.08,t);gain.gain.exponentialRampToValueAtTime(0.001,t+0.5);
+        osc.start(t);osc.stop(t+0.6);break;
+      case'heal':
+        osc.type='triangle';osc.frequency.setValueAtTime(600,t);osc.frequency.exponentialRampToValueAtTime(900,t+0.1);
+        gain.gain.setValueAtTime(0.05,t);gain.gain.exponentialRampToValueAtTime(0.001,t+0.15);
+        osc.start(t);osc.stop(t+0.18);break;
+      case'buy':
+        osc.type='sine';osc.frequency.setValueAtTime(400,t);osc.frequency.setValueAtTime(600,t+0.08);
+        gain.gain.setValueAtTime(0.05,t);gain.gain.exponentialRampToValueAtTime(0.001,t+0.2);
+        osc.start(t);osc.stop(t+0.22);break;
+      case'save':
+        osc.type='sine';osc.frequency.setValueAtTime(600,t);osc.frequency.setValueAtTime(900,t+0.06);osc.frequency.setValueAtTime(1200,t+0.12);
+        gain.gain.setValueAtTime(0.04,t);gain.gain.exponentialRampToValueAtTime(0.001,t+0.25);
+        osc.start(t);osc.stop(t+0.3);break;
+      case'crisis':
+        osc.type='sawtooth';osc.frequency.setValueAtTime(150,t);osc.frequency.exponentialRampToValueAtTime(60,t+0.6);
+        gain.gain.setValueAtTime(0.12,t);gain.gain.exponentialRampToValueAtTime(0.001,t+0.6);
+        osc.start(t);osc.stop(t+0.7);break;
+      case'skill':
+        osc.type='sine';[523,659,784].forEach((f,i)=>{
+          const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);
+          o.type='sine';o.frequency.setValueAtTime(f,t+i*0.1);
+          g.gain.setValueAtTime(0.05,t+i*0.1);g.gain.exponentialRampToValueAtTime(0.001,t+i*0.1+0.2);
+          o.start(t+i*0.1);o.stop(t+i*0.1+0.25);
+        });
+        osc.start(t);osc.stop(t+0.5);break;
+    }
+  }catch(e){}
+}
+
+// =========================================================
+// 环境音效 (Web Audio 背景音)
+// =========================================================
+let _ambientNodes=null;
+function startAmbientSound(){
+  try{
+    const ctx=getAudioCtx();if(!ctx)return;
+    stopAmbientSound();
+    const master=ctx.createGain();master.gain.setValueAtTime(0.03,ctx.currentTime);
+    master.connect(ctx.destination);
+    const osc=ctx.createOscillator();osc.type='sine';osc.frequency.setValueAtTime(80,ctx.currentTime);
+    const g1=ctx.createGain();g1.gain.setValueAtTime(0.02,ctx.currentTime);
+    osc.connect(g1);g1.connect(master);osc.start();
+    const osc2=ctx.createOscillator();osc2.type='sine';osc2.frequency.setValueAtTime(95,ctx.currentTime);
+    const g2=ctx.createGain();g2.gain.setValueAtTime(0.01,ctx.currentTime);
+    osc2.connect(g2);g2.connect(master);osc2.start();
+    _ambientNodes={master,osc,osc2};
+  }catch(e){_ambientNodes=null;}
+}
+function stopAmbientSound(){
+  if(_ambientNodes){
+    try{_ambientNodes.osc.stop();_ambientNodes.osc2.stop();}catch(e){}
+    _ambientNodes=null;
+  }
+}
+function updateAmbientSound(){
+  if(!_ambientNodes||!G||G.gameOver){stopAmbientSound();return;}
+  try{
+    const ctx=getAudioCtx();if(!ctx)return;
+    const w=WEATHERS[G.weather];
+    let freq=80,vol=0.02;
+    if(w.id==='stormy'||w.id==='rainy'){freq=60;vol=0.04;}
+    else if(w.id==='coldwave'){freq=50;vol=0.03;}
+    else if(w.id==='heatwave'){freq=120;vol=0.015;}
+    _ambientNodes.osc.frequency.setValueAtTime(freq,ctx.currentTime);
+    _ambientNodes.master.gain.setValueAtTime(vol,ctx.currentTime);
+  }catch(e){}
+}
+
+// =========================================================
+// 快捷使用
+// =========================================================
+function quickUse(type){
+  if(G.gameOver)return;
+  let item;
+  if(type==='food'){
+    item=G.backpack.find(b=>b.type==='food'&&b.effects.hunger);
+  }else{
+    // 药品快捷：优先用体温药，其次用生命药
+    item=G.backpack.find(b=>b.type==='medicine'&&b.effects.temperature)
+      ||G.backpack.find(b=>b.type==='medicine'&&b.effects.health);
+  }
+  if(!item){showToast('⚠️','背包中没有可用的'+ (type==='food'?'食物':'药品'));return;}
+  const idx=G.backpack.indexOf(item);
+  const effs=[];
+  if(item.effects.hunger){G.hunger=Math.min(100,G.hunger+item.effects.hunger);effs.push(`🍖+${item.effects.hunger}`);}
+  if(item.effects.health){G.health=Math.min(100,G.health+item.effects.health);effs.push(`❤️+${item.effects.health}`);}
+  if(item.effects.temperature){G.temperature=Math.min(100,G.temperature+item.effects.temperature);effs.push(`🌡️+${item.effects.temperature}`);}
+  if(item.effects.cureAll){G.heatStroke=false;G.cold=false;effs.push('💊治愈');}
+  else if(item.effects.cureCold){G.cold=false;effs.push('💊治感冒');}
+  item.quantity--;
+  if(item.quantity<=0)G.backpack.splice(idx,1);
+  sceneAnim.pose='healing';sceneAnim.startTime=performance.now();
+  playSFX('heal');
+  addLog(`⚡快捷使用 ${item.name}，${effs.join('，')}`,'success');
+  spawnText(`${item.icon} ${effs.join(' ')}`,'heal',rand(25,75),55);
+  renderAll();
+}
+
+// =========================================================
+// 游戏状态
+// =========================================================
+let G=null;
+let sceneAnim={pose:'idle',startTime:0,beastFlash:0,damageFlash:0,shelterBuildTime:0};
+let lastFrameTime=0;
+let sceneLoopId=null;
+
+function defaultState(){
+  return{
+    carbon:15,hunger:70,temperature:50,health:100,
+    toolLv:0,shelterLv:0,protectionLv:0,
+    trees:[],backpack:[],
+    day:1,actionCount:0,totalPlanted:0,totalCarbonEarned:0,
+    gameOver:false,log:[],paused:false,
+    heatStroke:false,cold:false,
+    weather:0,weatherCounter:0,
+    _a10:false,_a100:false,_a500:false,_a200:false,_aSh:false,_aTo:false,_aPr:false,_legend:false,_tut1:false,_tut2:false,_tut3:false,_crisis1:false,_aCrisis:false,_aSkill6:false,
+    _beastCount:0,_crisisCount:0,
+    lastAction:'none',
+    stumps:[],
+    charClass:0,skills:[],_skillBonus:{},maxForest:0,tutorialStep:0,
+    _beastTimer:0,_eventTimer:0,_carbonSoundCounter:0,
+  };
+}
+
+// =========================================================
+// 辅助
+// =========================================================
+function gp(){return TOOL_PLANT[G.toolLv];}
+function gs(){return SHELTER_STAB[G.shelterLv];}
+function gpr(){return PROTECT_RATE[G.protectionLv];}
+function rand(a,b){if(a>b){const t=a;a=b;b=t;}if(a===b)return a;return Math.floor(Math.random()*(b-a+1))+a;}
+function clamp(v,l,h){return Math.max(l,Math.min(h,v));}
+
+// 碳汇协同加成：树木越多，每棵产出越高（每10棵+2%）
+function carbonRatePerSecond(){
+  if(!G||!G.trees)return 0;
+  const mature=G.trees.filter(t=>t.mature).length;
+  if(mature===0)return 0;
+  const base=mature*CARBON_PER_TREE_PER_MIN/60;
+  const synergy=1+Math.floor(mature/10)*0.02;
+  const rate=base*synergy;
+  return isNaN(rate)||!isFinite(rate)?0:rate;
+}
+let _lastCarbonRate=0; // 用于检测速率变化
+
+function addLog(msg,t){G.log.push({msg,type:t||'normal'});if(G.log.length>100)G.log.splice(0,G.log.length-80);}
+function showToast(ic,msg){const t=document.getElementById('toast');t.querySelector('.icon').textContent=ic;t.querySelector('.msg').textContent=msg;t.classList.add('show');clearTimeout(t._timer);t._timer=setTimeout(()=>t.classList.remove('show'),2600);}
+function spawnText(txt,cls,x,y){const el=document.createElement('div');el.className='floating-text '+cls;el.textContent=txt;el.style.left=(x||50)+'%';el.style.top=(y||45)+'%';el.style.transform='translateX(-50%)';document.body.appendChild(el);setTimeout(()=>el.remove(),1300);}
+
+// =========================================================
+// 存档系统 (带大小限制和微信兼容)
+// =========================================================
+let gameSpeed=1;
+const SAVE_KEY='carbonSurvival_save';
+let _saveSupported=true;
+function isStorageAvailable(){
+  if(!_saveSupported)return false;
+  try{const t='__test__';localStorage.setItem(t,t);localStorage.removeItem(t);return true;}
+  catch(e){_saveSupported=false;return false;}
+}
+function saveGame(){
+  if(!G||G.gameOver)return false;
+  if(!isStorageAvailable()){showToast('⚠️','此设备不支持存档');return false;}
+  try{
+    // 精简存档数据以减小体积
+    const saveData={
+      v:2,
+      carbon:G.carbon,hunger:G.hunger,temperature:G.temperature,health:G.health,
+      toolLv:G.toolLv,shelterLv:G.shelterLv,protectionLv:G.protectionLv,
+      trees:G.trees.slice(-200), // 最多保存200棵树
+      backpack:G.backpack.slice(-30),
+      day:G.day,actionCount:G.actionCount,totalPlanted:G.totalPlanted,
+      totalCarbonEarned:G.totalCarbonEarned,
+      weather:G.weather,weatherCounter:G.weatherCounter,
+      heatStroke:G.heatStroke,cold:G.cold,
+      charClass:G.charClass,skills:G.skills,_skillBonus:G._skillBonus,
+      maxForest:G.maxForest,stumps:G.stumps,
+      _beastCount:G._beastCount||0,_crisisCount:G._crisisCount||0,
+      // 成就标记
+      _a10:G._a10,_a100:G._a100,_a500:G._a500,_a200:G._a200,
+      _aSh:G._aSh,_aTo:G._aTo,_aPr:G._aPr,_legend:G._legend,
+      _crisis1:G._crisis1,_aCrisis:G._aCrisis,_aSkill6:G._aSkill6,
+      _tut1:G._tut1,_tut2:G._tut2,_tut3:G._tut3,
+    };
+    // 清理null/undefined字段
+    Object.keys(saveData).forEach(k=>{if(saveData[k]===undefined)delete saveData[k];});
+    const data=JSON.stringify(saveData);
+    if(data.length>500000){showToast('⚠️','存档数据过大');return false;}
+    localStorage.setItem(SAVE_KEY,data);
+    playSFX('save');
+    showToast('💾','游戏已保存！');
+    return true;
+  }catch(e){showToast('⚠️','保存失败：'+e.message);return false;}
+}
+function loadGame(){
+  if(!isStorageAvailable())return null;
+  try{
+    const raw=localStorage.getItem(SAVE_KEY);
+    if(!raw)return null;
+    const parsed=JSON.parse(raw);
+    if(parsed.v===undefined&&parsed.carbon!==undefined)return parsed; // v1 格式
+    return parsed;
+  }catch(e){return null;}
+}
+function deleteSave(){try{localStorage.removeItem(SAVE_KEY);}catch(e){}}
+
+// =========================================================
+// 标题画面 + 角色选择
+// =========================================================
+function initTitleScreen(){
+  const grid=document.getElementById('charGrid');
+  grid.innerHTML=CHARACTERS.map((c,i)=>`
+    <div class="char-card ${i===0?'selected':''}" data-idx="${i}" onclick="selectChar(${i})">
+      <span class="cicon">${c.icon}</span>
+      <div class="cname">${c.name}</div>
+      <div class="cdesc">${c.desc}</div>
+      <div class="cbuff">${c.buff}</div>
+    </div>
+  `).join('');
+  const saved=loadGame();
+  const loadBtn=document.getElementById('titleLoadBtn');
+  const info=document.getElementById('titleSaveInfo');
+  if(saved&&saved.day){
+    loadBtn.style.display='inline-block';
+    info.textContent=`💾 有存档：第${saved.day}天，${saved.trees||0}棵树`;
+  }else{
+    loadBtn.style.display='none';
+    info.textContent='';
+  }
+}
+let _selectedChar=0;
+function selectChar(i){
+  _selectedChar=i;
+  document.querySelectorAll('.char-card').forEach((el,idx)=>el.classList.toggle('selected',idx===i));
+}
+function startNewGame(){
+  document.getElementById('titleScreen').classList.add('hidden');
+  initGame();
+  G.charClass=_selectedChar;
+  // 角色初始加成
+  const cls=CHARACTERS[_selectedChar];
+  addLog(`🎭 你选择了 ${cls.icon} ${cls.name}`,'success');
+  if(_selectedChar===1){G.trees.push({progress:2,mature:false});addLog('🌱 园丁：开局额外获得一棵树苗','success');}
+  if(_selectedChar===2){G.carbon+=10;addLog('⚡ 商人：开局额外获得10碳汇','success');}
+  if(_selectedChar===4){G.health=110;addLog('❤️ 医生：基础生命值+10','success');}
+  startAmbientSound();
+  showTutorial(1);
+}
+function loadSavedGame(){
+  const data=loadGame();
+  if(!data){showToast('⚠️','没有存档');return;}
+  document.getElementById('titleScreen').classList.add('hidden');
+  G=defaultState();
+  // v2 格式 - 逐字段恢复
+  if(data.v===2){
+    const keys=['carbon','hunger','temperature','health','toolLv','shelterLv','protectionLv',
+      'trees','backpack','day','actionCount','totalPlanted','totalCarbonEarned',
+      'weather','weatherCounter','heatStroke','cold','charClass','skills','_skillBonus',
+      'maxForest','stumps','_beastCount','_crisisCount',
+      '_a10','_a100','_a500','_a200','_aSh','_aTo','_aPr','_legend',
+      '_crisis1','_aCrisis','_aSkill6','_tut1','_tut2','_tut3'];
+    keys.forEach(k=>{if(data[k]!==undefined)G[k]=data[k];});
+    // 确保 trees 里有 mature 属性
+    if(G.trees)G.trees.forEach(t=>{if(t.mature===undefined)t.mature=t.progress>=3;});
+    if(!G.backpack)G.backpack=[];
+    if(!G.stumps)G.stumps=[];
+    if(!G.skills)G.skills=[];
+    if(!G._skillBonus)G._skillBonus={};
+  }else{
+    Object.assign(G,data);
+  }
+  G.gameOver=false;
+  G.paused=false;
+  G._beastTimer=0;
+  G._eventTimer=0;
+  G._carbonSoundCounter=0;
+  G.lastAction='none';
+  G.tutorialStep=0;
+  lastFrameTime=0;
+  sceneAnim={pose:'idle',startTime:0,beastFlash:0,damageFlash:0,shelterBuildTime:0};
+  particles=[];
+  addLog('📂 读取存档，继续冒险','success');
+  addLog(`📅 第${G.day}天 - ${G.totalPlanted}棵树 - ${Math.floor(G.carbon)}碳汇`,'normal');
+  renderAll();
+  if(sceneLoopId)cancelAnimationFrame(sceneLoopId);
+  lastFrameTime=performance.now();sceneLoop(lastFrameTime);
+  startAmbientSound();
+}
+function backToTitle(){
+  document.getElementById('gameoverOverlay').classList.remove('open');
+  closeExchange();closeBackpack();closeAchievements();closeSkills();
+  stopAmbientSound();
+  document.getElementById('titleScreen').classList.remove('hidden');
+  initTitleScreen();
+}
+
+// =========================================================
+// 全屏 + 速度
+// =========================================================
+function toggleFullscreen(){
+  if(isWeChat){showToast('⛶','微信中不支持全屏');return;}
+  if(!document.fullscreenElement&&document.documentElement.requestFullscreen){
+    document.documentElement.requestFullscreen().catch(()=>{});
+  }else if(document.exitFullscreen){
+    document.exitFullscreen().catch(()=>{});
+  }
+}
+function cycleSpeed(){
+  gameSpeed=gameSpeed===1?2:gameSpeed===2?3:1;
+  document.getElementById('speedBtn').textContent=gameSpeed+'×';
+  document.getElementById('speedBtn').classList.toggle('active',gameSpeed>1);
+  showToast('⏱️','速度：'+gameSpeed+'×');
+}
+
+// =========================================================
+// 教程系统
+// =========================================================
+const TUTORIAL_STEPS=[
+  {title:'🌱 欢迎来到末世',text:'欢迎来到<strong>碳世求生</strong>！你的目标是<strong>活到100天</strong>或<strong>种植500棵树</strong>。<br><br>现在，试着点击下面的<strong>「植树」</strong>按钮，种下你的第一批树！'},
+  {title:'🍖 关注状态',text:'右上角的<strong>饱食度</strong>会随时间下降，归零会扣生命。<br><br>点击<strong>「兑换」</strong>可以用碳汇购买食物。<br>购买的食物会存入<strong>背包</strong>，需要时手动使用。'},
+  {title:'🌡️ 应对天气',text:'天气和季节会影响你的<strong>体温</strong>。<br><br>升级<strong>住所</strong>可以稳定体温。<br>体温过高会中暑，过低会感冒，都会持续掉血！'},
+  {title:'🦎 小心野兽',text:'每回合都有几率遭遇<strong>变异野兽</strong>袭击，它们会摧毁你的树林！<br><br>建造<strong>防护设施</strong>可以减少损失。<br>被毁的树会留下树桩，3回合后消失。'},
+  {title:'🏆 最终目标',text:'种植<strong>500棵树</strong>或生存<strong>100天</strong>即可获胜！<br>种植1000棵树可获得<strong>传奇成就</strong>！<br><br>💡 提示：按键盘 <strong>1</strong> 植树、<strong>2</strong> 背包、<strong>3</strong> 兑换、<strong>4</strong> 休息、<strong>Esc</strong> 关闭弹窗'},
+];
+let _tutStep=0;
+function showTutorial(step){
+  if(G.tutorialStep===0&&step===1){
+    _tutStep=1;
+    G.tutorialStep=1;
+    renderTutStep();
+    document.getElementById('tutOverlay').classList.add('open');
+  }
+}
+function renderTutStep(){
+  const idx=_tutStep-1;
+  const s=TUTORIAL_STEPS[idx];
+  if(!s){hideTutorial();return;}
+  document.getElementById('tutTitle').textContent=s.title;
+  document.getElementById('tutText').innerHTML=s.text;
+  const dots=document.getElementById('tutDots');
+  dots.innerHTML=TUTORIAL_STEPS.map((_,i)=>`<div class="tut-dot ${i===idx?'active':''}"></div>`).join('');
+  document.getElementById('tutNextBtn').textContent=_tutStep>=TUTORIAL_STEPS.length?'✓ 完成':'下一步 →';
+}
+function tutNext(){
+  _tutStep++;
+  if(_tutStep>TUTORIAL_STEPS.length){hideTutorial();return;}
+  renderTutStep();
+  if(_tutStep===3)G.tutorialStep=3;
+}
+function hideTutorial(){
+  document.getElementById('tutOverlay').classList.remove('open');
+  G.tutorialStep=0;
+}
+// 按行动触发教程
+function checkTutorial(action){
+  if(G.tutorialStep===0)return;
+  if(action==='plant'&&_tutStep===1){_tutStep=2;renderTutStep();}
+  else if(action==='exchange'&&_tutStep===2){_tutStep=3;renderTutStep();}
+}
+
+// =========================================================
+// 成就系统
+// =========================================================
+function checkAchievements(){
+  if(!G||G.gameOver)return;
+  ACHIEVEMENTS.forEach(a=>{
+    if(!G[a.id]&&a.check(G)){
+      G[a.id]=true;
+      G._aAll=G._aAll||0;G._aAll++;
+      showToast('🏆',a.icon+' '+a.name+' — '+a.desc);
+      addLog(`🏆 成就解锁：${a.icon} ${a.name}`,'success');
+      playSFX('victory');
+    }
+  });
+}
+function openAchievements(){
+  if(G.gameOver)return;
+  document.getElementById('achievementModal').classList.add('open');
+  const c=document.getElementById('achievementContent');
+  c.innerHTML=ACHIEVEMENTS.map(a=>{
+    const unlocked=G[a.id];
+    return `<div class="ach-card ${unlocked?'unlocked':'locked'}">
+      <span class="aicon">${a.icon}</span>
+      <div class="ainfo">
+        <div class="aname">${a.name}</div>
+        <div class="adesc">${a.desc}</div>
+      </div>
+      <span class="abadge">${unlocked?'✓':'🔒'}</span>
+    </div>`;
+  }).join('');
+}
+function closeAchievements(){document.getElementById('achievementModal').classList.remove('open');}
+
+// =========================================================
+// 技能系统
+// =========================================================
+function openSkills(){
+  if(G.gameOver)return;
+  document.getElementById('skillModal').classList.add('open');
+  renderSkills();
+}
+function closeSkills(){document.getElementById('skillModal').classList.remove('open');}
+function renderSkills(){
+  const c=document.getElementById('skillContent');
+  c.innerHTML=SKILLS.map(s=>{
+    const owned=G.skills.includes(s.id);
+    const prereqMet=s.prereq.every(p=>G.skills.includes(p));
+    const canBuy=!owned&&prereqMet&&G.carbon>=s.cost;
+    const cls=owned?'owned':(canBuy?'available':'locked');
+    return `<div class="skill-card ${cls}" ${canBuy?`onclick="unlockSkill('${s.id}')"`:''}>
+      <div class="sname">${s.name} ${owned?'✓':''}</div>
+      <div class="sdesc">${s.desc}</div>
+      <div class="scost">${owned?'已解锁':(canBuy?`⚡${s.cost} 点击解锁`:(prereqMet?`⚡${s.cost}`:'🔒 需要前置技能'))}</div>
+    </div>`;
+  }).join('');
+}
+function unlockSkill(id){
+  if(G.gameOver)return;
+  const skill=SKILLS.find(s=>s.id===id);
+  if(!skill||G.skills.includes(id)||G.carbon<skill.cost)return;
+  const prereqMet=skill.prereq.every(p=>G.skills.includes(p));
+  if(!prereqMet){showToast('⚠️','前置技能未解锁');return;}
+  G.carbon-=skill.cost;
+  G.skills.push(id);
+  if(skill.effect)skill.effect(G);
+  addLog(`🔬 解锁技能：${skill.name}`,'success');
+  showToast('🔬',`研究完成：${skill.name}`);
+  playSFX('skill');
+  renderSkills();renderAll();
+  checkAchievements();
+}
+
+// =========================================================
+// 选择事件系统
+// =========================================================
+let _choiceResolve=null;
+function triggerChoiceEvent(){
+  if(G.gameOver)return;
+  const ev=CHOICE_EVENTS[rand(0,CHOICE_EVENTS.length-1)];
+  document.getElementById('choiceTitle').textContent=ev.title;
+  document.getElementById('choiceDesc').textContent=ev.desc;
+  const co=document.getElementById('choiceOptions');
+  co.innerHTML=ev.options.map((opt,i)=>`
+    <div class="choice-opt" onclick="chooseOption(${i})">
+      <div class="co-title">${opt.text}</div>
+      <div class="co-desc">${opt.desc}</div>
+    </div>
+  `).join('');
+  document.getElementById('choiceModal').classList.add('open');
+  G.paused=true;
+  _choiceResolve=ev.options;
+}
+function chooseOption(idx){
+  document.getElementById('choiceModal').classList.remove('open');
+  G.paused=false;
+  if(_choiceResolve&&_choiceResolve[idx]){
+    const result=_choiceResolve[idx].effect(G);
+    addLog(`📜 ${result}`,'event');
+    showToast('📜',result);
+    renderAll();
+  }
+  _choiceResolve=null;
+}
+
+// =========================================================
+// 危机系统
+// =========================================================
+function checkCrisis(){
+  if(!G||G.gameOver)return;
+  CRISES.forEach(c=>{
+    if(G.day===c.day){
+      const result=c.effect(G);
+      G._crisisCount=(G._crisisCount||0)+1;
+      addLog(`🌊 危机！${c.icon} ${c.name}：${result}`,'danger');
+      showCrisisBanner(c.icon+' '+c.name+'！',c.desc);
+      playSFX('crisis');
+      // 震屏
+      const game=document.getElementById('game');
+      game.classList.remove('shake');void game.offsetWidth;game.classList.add('shake');
+      setTimeout(()=>game.classList.remove('shake'),400);
+      checkAchievements();
+      renderAll();
+    }
+  });
+}
+function showCrisisBanner(title,desc){
+  const b=document.getElementById('crisisBanner');
+  b.innerHTML=`<div>${title}</div><div style="font-size:12px;font-weight:400;margin-top:4px;">${desc}</div>`;
+  b.style.display='block';b.className='crisis-banner danger';
+  b.classList.remove('shake');void b.offsetWidth;
+  setTimeout(()=>{b.style.display='none';},3000);
+}
+
+// =========================================================
+// 暂停辅助：弹窗时暂停实时更新
+// =========================================================
+function setPaused(p){
+  if(G){G.paused=p;}
+}
+
+// =========================================================
+// 实时更新（每帧）
+// =========================================================
+function realtimeUpdate(dtSec){
+  if(!G||G.gameOver)return;
+  if(G.paused)return; // 暂停时冻结实时更新
+  dtSec*=gameSpeed; // 速度倍率
+  // 碳汇（含协同加成）
+  const mature=G.trees.filter(t=>t.mature).length;
+  let cps=carbonRatePerSecond();
+  // 商人角色加成
+  if(G.charClass===2)cps*=1.2;
+  G.carbon+=cps*dtSec;
+  G.totalCarbonEarned+=cps*dtSec;
+  // 碳汇音效（每累计1碳汇响一次）
+  if(mature>0){
+    G._carbonSoundCounter=(G._carbonSoundCounter||0)+cps*dtSec;
+    if(G._carbonSoundCounter>=1){playSFX('carbon');G._carbonSoundCounter=0;}
+  }
+  // 实时饥饿（受技能影响）
+  const hungerRate=G._skillBonus&&G._skillBonus.hungerReduce?HUNGER_PER_MIN*(1-G._skillBonus.hungerReduce):HUNGER_PER_MIN;
+  G.hunger=Math.max(0,G.hunger-hungerRate/60*dtSec);
+  // 实时体温漂移（受技能+角色影响）
+  const w=WEATHERS[clamp(G.weather,0,WEATHERS.length-1)];
+  const tempResist=G._skillBonus&&G._skillBonus.tempResist?1-G._skillBonus.tempResist:1;
+  // 体温缓慢回归50（中性），速度极慢
+  const driftTo=TEMP_DRIFT_PER_MIN/60*dtSec*tempResist;
+  if(G.temperature<50)G.temperature=Math.min(50,G.temperature+driftTo);
+  else if(G.temperature>50)G.temperature=Math.max(50,G.temperature-driftTo);
+  // 天气缓慢影响（带住所减免+技能阻力），不会瞬间大幅变化
+  const shelterResist=1/(1+G.shelterLv*0.5); // 住所越高，天气影响越小
+  const weatherPull=(w.tempMod*0.15)*shelterResist*tempResist*0.002*dtSec*60;
+  G.temperature=clamp(G.temperature+weatherPull,0,100);
+  // 纳米修复技能：每帧自动回血
+  if(G._skillBonus&&G._skillBonus.nanoHeal){
+    G.health=Math.min(100,G.health+G._skillBonus.nanoHeal/60*dtSec);
+  }
+
+  // === 实时随机事件系统 ===
+
+  // 1️⃣ 野兽袭击计时器（实时随机，与行动解耦）
+  if(G.trees.length>0){
+    G._beastTimer=(G._beastTimer||0)+dtSec;
+    const season=getSeason(G.day);
+    // 季节影响袭击频率：春季长间隔，冬季频繁
+    const baseInterval=season.beastMod>0?Math.max(15,35/season.beastMod):35;
+    const interval=baseInterval+rand(5,25);
+    if(G._beastTimer>=interval){
+      G._beastTimer=0;
+      const beastChance=0.30;
+      if(Math.random()<beastChance)triggerBeast();
+    }
+  }else{
+    G._beastTimer=0; // 没树时不累计野兽计时
+  }
+
+  // 2️⃣ 随机事件计时器（酸雨/沃土/碳汇矿脉等）
+  G._eventTimer=(G._eventTimer||0)+dtSec;
+  if(G._eventTimer>=25+rand(0,25)){
+    G._eventTimer=0;
+    if(Math.random()<0.3){
+      const ev=EVENTS[Math.floor(Math.random()*EVENTS.length)];
+      const season=getSeason(G.day);
+      const r=ev.apply(G);
+      if(r!==false){
+        if(ev.id==='carbonbonus'&&season.carbonBonus>0){G.carbon+=5;addLog(`${ev.icon} ${ev.desc} (${season.name}额外+5)`,'event');}
+        else addLog(`${ev.icon} ${ev.desc}`,'event');
+        spawnText(ev.icon,'carbon',rand(20,80),rand(30,50));
+      }
+    }
+  }
+
+  updateAmbientSound();
+}
+
+// =========================================================
+// 回合逻辑
+// =========================================================
+function endTurn(){
+  if(G.gameOver)return;
+  G.actionCount++;
+  if(G.actionCount>=2){G.actionCount=0;G.day++;}
+
+  // 季节影响
+  const season=getSeason(G.day);
+
+  // 危机检查（每30天强制事件）
+  checkCrisis();
+
+  // 选择事件（10%概率，不在危机回合触发）
+  if(Math.random()<0.1&&CRISES.every(c=>c.day!==G.day)){
+    triggerChoiceEvent();
+  }
+
+  // 跟踪最大森林数量
+  if(G.trees.length>G.maxForest)G.maxForest=G.trees.length;
+
+  // 饱食回合扣除（按行动类型消耗）
+  let hungerCost=8;
+  if(G.lastAction==='plant')hungerCost=13;
+  else if(G.lastAction==='rest')hungerCost=4;
+  G.hunger=Math.max(0,G.hunger-hungerCost*(G.cold?1.5:1));
+  G.lastAction='none';
+  if(G.hunger<=0){G.hunger=0;G.health=Math.max(0,G.health-8);addLog('饥饿难忍，生命流失！','danger');}
+
+  // 体温（受季节+天气+住所影响）
+  const stab=gs();
+  // 温和的温度波动，住所提供稳定（使用上方已声明的 season）
+  const net=rand(-3,3)-stab*0.5+season.tempBias*0.3;
+  G.temperature=clamp(G.temperature+net,0,100);
+  // 极端温度警告（不再直接扣血，而是标记状态）
+  if(G.temperature<18){G.cold=true;if(G.temperature<5){G.health=Math.max(0,G.health-3);addLog('体温极低，生命流失！','danger');}}
+  else if(G.temperature>82){G.heatStroke=true;if(G.temperature>95){G.health=Math.max(0,G.health-3);addLog('体温极高，生命流失！','danger');}}
+
+  // 状态效果判定
+  if(G.gameOver)return;
+  if(G.temperature>=80){G.heatStroke=true;}
+  else if(G.temperature<20){G.cold=true;}
+  else{
+    if(Math.random()<0.25)G.heatStroke=false;
+    if(Math.random()<0.25)G.cold=false;
+  }
+  // 状态影响
+  if(G.heatStroke){G.health=Math.max(0,G.health-3);addLog('🔥 中暑！生命持续流失','danger');}
+  if(G.cold){G.health=Math.max(0,G.health-3);addLog('🥶 感冒！生命持续流失','danger');}
+
+  // 住所被动生命恢复
+  if(G.shelterLv>0){G.health=Math.min(100,G.health+G.shelterLv*1);}
+
+  // 树木生长（受季节+技能影响）
+  const growBonus=G._skillBonus&&G._skillBonus.growSpeed?G._skillBonus.growSpeed:0;
+  let newMature=0;
+  G.trees.forEach(t=>{
+    if(!t.mature){
+      t.progress+=(season.plantBonus>0?1.2:1)+growBonus;
+      if(t.progress>=3){t.mature=true;newMature++;}
+    }
+  });
+  if(newMature>0){
+    spawnText(`+${newMature}🌲 新树成熟！`,'carbon',rand(20,80),rand(35,55));
+    addLog(`🌲 ${newMature}棵树成熟，碳汇产出提升！`,'success');
+  }
+
+  // 树桩消退
+  G.stumps=G.stumps.filter(s=>{s.turns--;return s.turns>0;});
+
+  // 碳汇速率变化检测
+  const currentRate=carbonRatePerSecond();
+  if(G._lastCarbonRate!==undefined&&Math.abs(currentRate-G._lastCarbonRate)>0.05){
+    const diff=currentRate-G._lastCarbonRate;
+    const dir=diff>0?'📈':'📉';
+    addLog(`${dir} 碳汇速率 ${G._lastCarbonRate.toFixed(2)}→${currentRate.toFixed(2)}/秒`,'event');
+  }
+  G._lastCarbonRate=currentRate;
+
+  // 天气轮换 (每2-6回合,受季节偏斜) + 过渡动画
+  G.weatherCounter--;
+  if(G.weatherCounter<=0){
+    let nw;
+    // 季节偏斜天气选择
+    do{
+      nw=rand(0,WEATHERS.length-1);
+      // 40%概率偏向季节天气
+      if(Math.random()<0.4){
+        const bias=season.weatherBias;
+        const bw=WEATHERS.findIndex(w=>w.id===bias[Math.floor(Math.random()*bias.length)]);
+        if(bw>=0)nw=bw;
+      }
+    }while(nw===G.weather);
+    G.weather=nw;
+    G.weatherCounter=rand(2,6);
+    addLog(`${WEATHERS[G.weather].icon} 天气转变：${WEATHERS[G.weather].name} (${season.icon}${season.name})`,'event');
+    // 天气换转动画
+    const wb=document.getElementById('weatherBar');
+    wb.classList.remove('transition');void wb.offsetWidth;
+    wb.classList.add('transition');
+    setTimeout(()=>wb.classList.remove('transition'),600);
+  }
+
+  // === 新手引导（前3天） ===
+  if(G.day===1&&G.totalPlanted===0)addLog('💡 点击「🌱植树」种下第一棵树，树木成熟后产出碳汇','event');
+  else if(G.day===1&&G.totalPlanted>0&&!G._tut1){G._tut1=true;addLog('💡 去「🏪兑换」用碳汇买食物，存入背包后使用','event');}
+  else if(G.day===2&&G.hunger<50&&!G._tut2){G._tut2=true;addLog('💡 状态栏的⚡按钮可快速使用背包物品','event');}
+  else if(G.day===3&&!G._tut3){G._tut3=true;addLog('💡 注意季节变化！春夏秋冬影响体温和野兽频率','event');}
+
+  // === 失败条件：任一核心属性归零即死亡 ===
+  if(G.hunger<=0){
+    G.gameOver=true;playSFX('death');addLog('💀 饿死了...没能扛过饥荒','danger');
+    showGameOver('你被饿死了。在末世中，食物比黄金更珍贵。');renderAll();return;
+  }
+  if(G.temperature<=0){
+    G.gameOver=true;playSFX('death');addLog('💀 冻死了...没能扛过寒潮','danger');
+    showGameOver('严寒夺走了你的生命。在末世中，住所就是生命线。');renderAll();return;
+  }
+  if(G.temperature>=100){
+    G.gameOver=true;playSFX('death');addLog('💀 热死了...被高温吞噬','danger');
+    showGameOver('酷热夺走了你的生命。保持体温稳定至关重要。');renderAll();return;
+  }
+  if(G.health<=0){
+    G.health=0;G.gameOver=true;playSFX('death');addLog('💀 伤重不治','danger');
+    showGameOver('你的伤势太重，没能撑下去...');renderAll();return;
+  }
+
+  // 胜利条件：活到100天 或 植树500棵
+  if(G.day>=100||G.totalPlanted>=500){
+    G.gameOver=true;playSFX('victory');
+    const isLegend=G.totalPlanted>=1000;
+    if(isLegend&&!G._legend){G._legend=true;addLog('🏆 传奇成就：植树1000棵！','success');}
+    showVictory(G.day>=100,G.totalPlanted>=500,isLegend);renderAll();return;
+  }
+
+  // 成就统一检测
+  checkAchievements();
+
+  // 自动存档（精简格式）
+  if(G.actionCount===0){saveGame();}
+
+  renderAll();
+}
+
+// =========================================================
+// 野兽（增强版 — 带生命值下降+震动）
+// =========================================================
+function triggerBeast(){
+  if(!G||G.gameOver||G.paused)return;
+  if(G.trees.length===0)return;
+  const beast=BEASTS[rand(0,BEASTS.length-1)];
+  const base=rand(beast.minD,beast.maxD);
+  // 季节影响：冬季野兽更凶猛
+  const seasonAlive=getSeason(G.day);
+  const seasonBoost=seasonAlive.beastMod>1?(seasonAlive.beastMod-1)*0.5:0;
+  const adjBase=Math.round(base*(1+seasonBoost));
+  // 角色加成：斥候减少15%破坏
+  const charBonus=G.charClass===3?0.15:0;
+  // 技能加成：根系加固
+  const rootBonus=G._skillBonus&&G._skillBonus.rootProtect?G._skillBonus.rootProtect:0;
+  // 技能加成：加固工事（增强防护效果）
+  const fortifyBonus=G._skillBonus&&G._skillBonus.fortify?G._skillBonus.fortify:0;
+  const totalProtect=Math.min(0.95,gpr()+fortifyBonus+charBonus+rootBonus);
+  const actual=Math.max(1,Math.ceil(adjBase*(1-totalProtect)));
+  const can=Math.min(actual,G.trees.length);
+  if(can<=0)return;
+  const sorted=[...G.trees].sort((a,b)=>(a.mature?1:0)-(b.mature?1:0));
+  for(let i=0;i<can;i++){const idx=G.trees.indexOf(sorted[i]);if(idx>-1)G.trees.splice(idx,1);}
+  G._beastCount++;
+
+  // 生命值下降：野兽袭击也会造成生命损失！
+  const healthLoss=rand(3,8);
+  G.health=Math.max(0,G.health-healthLoss);
+
+  const pm=G.protectionLv>0?` (减免${Math.round(gpr()*100)}%)`:' (无防护)';
+  addLog(`${beast.icon} ${beast.name}袭击！损失${can}棵，生命-${healthLoss}${pm}`,'beast');
+  showToast('🐾',`${beast.name}袭击！-${can}棵 ❤️-${healthLoss}`);
+
+  // 音效
+  playSFX('beast');
+
+  // 场景动画
+  sceneAnim.pose='beast';sceneAnim.startTime=performance.now();sceneAnim.beastFlash=1;sceneAnim.damageFlash=1;
+
+  // 震屏效果
+  const game=document.getElementById('game');
+  game.classList.remove('shake');void game.offsetWidth;game.classList.add('shake');
+  setTimeout(()=>game.classList.remove('shake'),400);
+
+  // 生命值闪烁
+  const hpItem=document.querySelectorAll('.stat-item')[2];
+  if(hpItem){hpItem.classList.remove('flash-health');void hpItem.offsetWidth;hpItem.classList.add('flash-health');}
+  setTimeout(()=>{if(hpItem)hpItem.classList.remove('flash-health');},700);
+
+  // 野兽脚印特效
+  spawnFootprints(beast.icon);
+
+  // 留下树桩
+  for(let i=0;i<can;i++)G.stumps.push({turns:3});
+
+  animateDestroy(can);
+  if(G.trees.length===0)addLog('森林被彻底摧毁...','danger');
+
+  // 游戏结束检查
+  if(G.health<=0){G.health=0;G.gameOver=true;addLog('💀 被野兽击倒...','danger');showGameOver('你被野兽袭击，没能撑过去...');renderAll();return;}
+  renderAll();
+}
+
+function spawnFootprints(icon){
+  for(let i=0;i<5;i++){
+    setTimeout(()=>{
+      const fp=document.createElement('div');fp.className='footprint';fp.textContent=icon||'🐾';
+      fp.style.left=(25+Math.random()*50)+'%';
+      fp.style.top=(20+Math.random()*40)+'%';
+      fp.style.fontSize=(14+Math.random()*10)+'px';
+      document.body.appendChild(fp);
+      setTimeout(()=>fp.remove(),900);
+    },i*80);
+  }
+}
+
+// =========================================================
+// 行动
+// =========================================================
+let _lastActionTime=0;
+function actionPlant(){
+  if(!G||G.gameOver)return;
+  if(performance.now()-_lastActionTime<400)return; // 防止双击
+  _lastActionTime=performance.now();
+  const c=gp();if(c===0)return;
+  for(let i=0;i<c;i++)G.trees.push({progress:0,mature:false});
+  G.totalPlanted+=c;
+  addLog(`🌱 种下 ${c} 棵树`,'success');
+  sceneAnim.pose='planting';sceneAnim.startTime=performance.now();
+  playSFX('plant');
+  renderAll();animatePlant(c);
+  spawnText(`+${c}🌱`,'carbon',rand(25,75),55);
+  G.lastAction='plant';
+  endTurn();
+}
+
+function actionRest(){
+  if(!G||G.gameOver)return;
+  if(performance.now()-_lastActionTime<400)return;
+  _lastActionTime=performance.now();
+  const bonus=[0,2,5,10][G.shelterLv];
+  const heal=10+bonus+(G.cold?0:3);
+  G.health=Math.min(100,G.health+heal);
+  addLog(`😴 休息，生命+${heal}${bonus>0?`(住所加成+${bonus})`:''}`,'normal');
+  sceneAnim.pose='resting';sceneAnim.startTime=performance.now();
+  spawnText(`+${heal}❤️`,'heal',rand(25,75),55);
+  G.lastAction='rest';
+  renderAll();endTurn();
+}
+
+// =========================================================
+// 兑换
+// =========================================================
+let currentCat='food';
+
+function openExchange(){if(G.gameOver)return;document.getElementById('exchangeModal').classList.add('open');switchCategory('food');setPaused(true);}
+function closeExchange(){document.getElementById('exchangeModal').classList.remove('open');setPaused(false);}
+
+function switchCategory(cat){currentCat=cat;document.querySelectorAll('.cat-tab').forEach(el=>el.classList.toggle('active',el.dataset.cat===cat));renderItems(cat);}
+
+function isOwned(item){return item.isUpgrade&&G[item.upgradeKey]>=item.upgradeVal;}
+
+function renderItems(cat){
+  const data=ITEMS[cat];const c=document.getElementById('itemsContainer');
+  // 如果是住所类别，显示住所预览图
+  if(cat==='shelter'){renderShelterPreview(data,c,cat);return;}
+  let html='';
+  data.items.forEach(item=>{
+    const owned=isOwned(item);const canBuy=!owned&&G.carbon>=item.cost&&!G.gameOver;
+    const eff=[];
+    if(item.effects.hunger)eff.push(`🍖+${item.effects.hunger}`);
+    if(item.effects.health)eff.push(`❤️+${item.effects.health}`);
+    if(item.effects.temperature)eff.push(`🌡️+${item.effects.temperature}`);
+    if(item.effects.tempStab)eff.push(`🌡️+${item.effects.tempStab}`);
+    if(item.effects.plantCount)eff.push(`🌱×${item.effects.plantCount}`);
+    if(item.effects.protectRate)eff.push(`🛡️${Math.round(item.effects.protectRate*100)}%`);
+    if(item.effects.restBonus)eff.push(`😴+${item.effects.restBonus}`);
+    if(item.effects.cureCold)eff.push(`💊治感冒`);
+    if(item.effects.cureAll)eff.push(`💊治中暑+感冒`);
+    const store=!item.isUpgrade?'<span style="font-size:9px;color:#f59e0b;">→背包</span>':'';
+    html+=`<div class="item-card"><div class="info"><div class="name">${item.name}<span class="tier">${item.tier}</span></div><div class="effects">${item.desc} · ${eff.join(' ')} ${store}</div></div><div class="buy-area"><div class="cost">⚡<span class="num">${item.cost}</span></div>${owned?`<button class="buy-btn owned">✓</button>`:`<button class="buy-btn" ${canBuy?`onclick="buyItem('${item.id}','${cat}')"`:'disabled'}>兑换</button>`}</div></div>`;
+  });
+  c.innerHTML=html;const mc=document.getElementById('modalCarbon');if(mc)mc.textContent=Math.floor(G.carbon);
+}
+
+// =========================================================
+// 住所预览渲染（带可视化图像）
+// =========================================================
+const SHELTER_VISUALS=[
+  {
+    name:'无',
+    emoji:'🕳️',
+    icon:'🕳️',
+    bg:'#080e08',
+    desc:'露天而居，风雨无阻',
+    stats:[{label:'🌡️ 稳定',val:'+0'},{label:'💤 休息',val:'基本'}],
+    color:'#4a6a4a'
+  },
+  {
+    name:'简易帐篷',
+    emoji:'⛺',
+    icon:'⛺',
+    bg:'#1a2a1a',
+    desc:'帆布帐篷，遮风挡雨的基本庇护',
+    stats:[{label:'🌡️ 稳定',val:'+5'},{label:'💤 休息',val:'+2恢复'}],
+    color:'#6a9a5a'
+  },
+  {
+    name:'保温木屋',
+    emoji:'🏡',
+    icon:'🏡',
+    bg:'#2a1a0a',
+    desc:'木质结构，保温舒适的小屋',
+    stats:[{label:'🌡️ 稳定',val:'+10'},{label:'💤 休息',val:'+5恢复'}],
+    color:'#c8a86a'
+  },
+  {
+    name:'生态恒温舱',
+    emoji:'🌐',
+    icon:'🌐',
+    bg:'#0a1a2a',
+    desc:'未来科技生态舱，恒温自循环系统',
+    stats:[{label:'🌡️ 稳定',val:'+20'},{label:'💤 休息',val:'+10恢复'}],
+    color:'#6ac8e8'
+  }
+];
+
+function renderShelterPreview(data,c,cat){
+  const currentLv=G.shelterLv;
+  let html='<div style="margin-bottom:10px;font-size:11px;color:#8ab88a;">🏠 当前住所可在场景中实时查看效果</div>';
+  data.items.forEach(item=>{
+    const owned=isOwned(item);
+    const canBuy=!owned&&G.carbon>=item.cost&&!G.gameOver;
+    const v=SHELTER_VISUALS[item.upgradeVal];
+    const isCurrent=G.shelterLv===item.upgradeVal;
+    const isNext=G.shelterLv===item.upgradeVal-1;
+    const borderColor=owned?'#4ade80':(canBuy?'#f59e0b':'#2d5a27');
+    let visualSvg='';
+    if(item.upgradeVal===1)visualSvg='△';// Tent triangle
+    else if(item.upgradeVal===2)visualSvg='◧';// House
+    else if(item.upgradeVal===3)visualSvg='◎';// Pod
+    else visualSvg='○';
+
+    html+=`
+    <div class="shelter-preview" style="border-color:${borderColor};${isCurrent?'background:#0f1f0f;':''}">
+      <div class="sp-visual" style="background:${v.bg};font-size:38px;border-color:${borderColor};">
+        <span style="filter:drop-shadow(0 0 6px ${v.color}40);">${v.icon}</span>
+      </div>
+      <div class="sp-info">
+        <div class="sp-name" style="color:${v.color};">
+          ${item.name} <span style="font-size:10px;color:#8ab88a;font-weight:400;">${item.tier}</span>
+          ${isCurrent?'<span style="font-size:10px;color:#4ade80;font-weight:400;">✓ 当前</span>':''}
+        </div>
+        <div class="sp-desc">${v.desc}</div>
+        <div class="sp-stats">
+          ${v.stats.map(s=>`<span class="sp-stat">${s.label} ${s.val}</span>`).join('')}
+          <span class="sp-stat" style="color:#f59e0b;">⚡${item.cost}</span>
+        </div>
+        <div style="margin-top:6px;">
+          ${owned
+            ?'<span style="color:#4ade80;font-size:11px;">✅ 已拥有</span>'
+            :(canBuy
+              ?`<button class="buy-btn" onclick="buyShelter('${item.id}','${cat}')" style="padding:4px 16px;">🏗️ 建造</button>`
+              :(isCurrent?'':`<span style="color:#ef4444;font-size:10px;">⚡${item.cost} 碳汇不足或需先升级前置</span>`)
+            )
+          }
+        </div>
+      </div>
+    </div>`;
+  });
+  c.innerHTML=html;
+  const mc=document.getElementById('modalCarbon');if(mc)mc.textContent=Math.floor(G.carbon);
+}
+
+function buyShelter(id,cat){
+  if(G.gameOver)return;
+  const item=ITEMS[cat].items.find(i=>i.id===id);
+  if(!item||G.carbon<item.cost||isOwned(item))return;
+  G.carbon-=item.cost;
+  G[item.upgradeKey]=item.upgradeVal;
+  addLog(`🏪 获得 ${item.name}`,'success');
+  showToast('🏠','建造了 '+item.name+'！');
+  playSFX('buy');
+  // 触发Canvas建造动画（脚手架+弹入效果，持续2秒）
+  sceneAnim.shelterBuildTime=performance.now();
+  // 住所建造文字提示
+  document.querySelector('.scene-overlay').textContent='🏗️ 建造中...';
+  setTimeout(()=>{if(!G.gameOver)document.querySelector('.scene-overlay').textContent='🛖 '+SHELTER_NAMES[G.shelterLv];},2000);
+  closeExchange();
+  renderAll();
+}
+
+function buyItem(id,cat){
+  if(G.gameOver)return;
+  const item=ITEMS[cat].items.find(i=>i.id===id);
+  if(!item||G.carbon<item.cost||isOwned(item))return;
+  G.carbon-=item.cost;
+  if(item.isUpgrade){
+    G[item.upgradeKey]=item.upgradeVal;
+    addLog(`🏪 获得 ${item.name}`,'success');showToast('🏪',`${item.name}！`);
+    playSFX('buy');
+    closeExchange();
+  }else{
+    const ex=G.backpack.find(b=>b.id===item.id);
+    if(ex){ex.quantity++;}
+    else{G.backpack.push({id:item.id,name:item.name,tier:item.tier,type:cat,effects:{...item.effects},icon:cat==='food'?'🍞':'💊',quantity:1});}
+    addLog(`🏪 ${item.name} 存入背包`,'success');renderItems(currentCat);
+  }
+  renderAll();
+}
+
+// =========================================================
+// 背包
+// =========================================================
+function openBackpack(){if(G.gameOver)return;document.getElementById('backpackModal').classList.add('open');renderBackpack();setPaused(true);}
+function closeBackpack(){document.getElementById('backpackModal').classList.remove('open');setPaused(false);}
+
+function renderBackpack(){
+  const c=document.getElementById('backpackContent');
+  if(G.backpack.length===0){c.innerHTML='<div class="bp-empty"><span class="big-icon">🎒</span>背包空空<br><span style="font-size:10px;">兑换物资来装满它</span></div>';return;}
+  const f=G.backpack.filter(b=>b.type==='food');const m=G.backpack.filter(b=>b.type==='medicine');
+  let html='';
+  if(f.length>0){html+=`<div class="bp-section"><h3>🍞 食物</h3>`;f.forEach(i=>html+=bpItem(i));html+=`</div>`;}
+  if(m.length>0){html+=`<div class="bp-section"><h3>💊 药品</h3>`;m.forEach(i=>html+=bpItem(i));html+=`</div>`;}
+  c.innerHTML=html;
+}
+
+function bpItem(item){
+  const eff=[];
+  if(item.effects.hunger)eff.push(`🍖+${item.effects.hunger}`);
+  if(item.effects.health)eff.push(`❤️+${item.effects.health}`);
+  if(item.effects.temperature)eff.push(`🌡️+${item.effects.temperature}`);
+  if(item.effects.cureCold)eff.push(`治感冒`);
+  if(item.effects.cureAll)eff.push(`治中暑+感冒`);
+  return `<div class="bp-item"><div class="info"><div class="iname">${item.icon} ${item.name} <span style="font-size:9px;color:#4ade80;">${item.tier}</span></div><div class="ieffects">${eff.join(' · ')}</div></div><div class="iright"><span class="iqty">×${item.quantity}</span><button class="use-btn" onclick="useItem('${item.id}')">使用</button></div></div>`;
+}
+
+function useItem(id){
+  if(G.gameOver)return;
+  const idx=G.backpack.findIndex(b=>b.id===id);
+  if(idx===-1)return;
+  const item=G.backpack[idx];
+  const effs=[];
+  if(item.effects.hunger){G.hunger=Math.min(100,G.hunger+item.effects.hunger);effs.push(`饱食+${item.effects.hunger}`);}
+  if(item.effects.health){G.health=Math.min(100,G.health+item.effects.health);effs.push(`生命+${item.effects.health}`);}
+  if(item.effects.temperature){G.temperature=Math.min(100,G.temperature+item.effects.temperature);effs.push(`体温+${item.effects.temperature}`);}
+  // 治疗状态
+  if(item.effects.cureAll){G.heatStroke=false;G.cold=false;effs.push('治愈所有症状');}
+  if(item.effects.cureCold&&!item.effects.cureAll){G.cold=false;effs.push('治愈感冒');}
+  item.quantity--;
+  if(item.quantity<=0)G.backpack.splice(idx,1);
+  sceneAnim.pose='healing';sceneAnim.startTime=performance.now();
+  playSFX('heal');
+  addLog(`🎒 使用 ${item.name}，${effs.join('，')}`,'success');
+  spawnText(`${item.icon} ${effs.join(' ')}`,'heal',rand(25,75),55);
+  renderBackpack();renderAll();
+}
+
+// =========================================================
+// 渲染 UI
+// =========================================================
+function renderAll(){
+  const el=id=>document.getElementById(id);
+  el('dayNum').textContent=String(G.day).padStart(2,'0');
+  updateCarbonDisplay();
+
+  el('hungerVal').textContent=Math.floor(G.hunger);
+  el('tempVal').textContent=Math.floor(G.temperature);
+  el('healthVal').textContent=Math.floor(G.health);
+
+  setBar('hungerBar',G.hunger,true);
+  setBar('tempBar',G.temperature,true);
+  setBar('healthBar',G.health,true);
+
+  const mature=G.trees.filter(t=>t.mature).length;
+  const growing=G.trees.filter(t=>!t.mature).length;
+  const total=G.trees.length;
+  const rate=carbonRatePerSecond();
+
+  el('shelterTag').textContent=`🏠 ${SHELTER_NAMES[G.shelterLv]}`;
+  el('toolTag').textContent=`🔧 ${TOOL_NAMES[G.toolLv]}(×${gp()})`;
+  el('protectTag').textContent=`🛡️ ${PROTECT_NAMES[G.protectionLv]}${G.protectionLv>0?`(${Math.round(gpr()*100)}%)`:''}`;
+  el('treeCountTag').textContent=`🌲 ${total}棵`;
+  const synergyBonus=Math.floor(G.trees.filter(t=>t.mature).length/10)*2;
+  el('incomeTag').textContent=synergyBonus>0?`⚡+${rate.toFixed(2)}/秒 (协同+${synergyBonus}%)`:`⚡+${rate.toFixed(2)}/秒`;
+  el('forestCounts').textContent=`🌱${growing}/🌲${mature}`;
+  el('growingCount').textContent=growing;
+  el('matureCount').textContent=mature;
+  el('totalCount').textContent=total;
+  el('plantSub').textContent=`种${gp()}棵`;
+
+  // 目标进度（500棵胜利，1000棵传奇）
+  const dayPct=Math.min(100,G.day/100*100);
+  const treePct=Math.min(100,G.totalPlanted/500*100);
+  const overall=Math.max(dayPct,treePct);
+  const goalBar=document.getElementById('goalBar');
+  const goalPct=document.getElementById('goalPercent');
+  if(goalBar)goalBar.style.width=overall+'%';
+  if(goalPct)goalPct.textContent=Math.floor(overall)+'%';
+  const gd=document.getElementById('goalDays');if(gd)gd.textContent=G.day;
+  const gt=document.getElementById('goalTrees');if(gt)gt.textContent=G.totalPlanted;
+  const gl=document.getElementById('goalLegend');
+  if(gl){
+    if(G.totalPlanted>=1000)gl.textContent='🏆 传奇达成！';
+    else gl.textContent=`🏆 传奇 ${G.totalPlanted}/1000`;
+  }
+  const gh=document.getElementById('goalHint');
+  if(gh){
+    const dLeft=Math.max(0,100-G.day);
+    const tLeft=Math.max(0,500-G.totalPlanted);
+    if(dLeft<=0&&tLeft<=0)gh.textContent='🎉 目标全部达成！';
+    else if(dLeft<=0)gh.textContent='🎉 天数已达标！继续种树冲击传奇';
+    else if(tLeft<=0)gh.textContent='🎉 树木已达标！继续生存冲击传奇';
+    else if(dLeft<10)gh.textContent=`⏳ 仅需再撑${dLeft}天（或再种${tLeft}棵）`;
+    else if(tLeft<50)gh.textContent=`⏳ 仅需再种${tLeft}棵（或再撑${dLeft}天）`;
+    else gh.textContent=`🌱 还需${dLeft}天或${tLeft}棵树`;
+  }
+
+  // 季节标识
+  const season=getSeason(G.day);
+  const sb=document.getElementById('seasonBadge');
+  if(sb){
+    sb.textContent=season.icon+' '+season.name;
+    sb.className='season-badge '+season.id;
+  }
+
+  // 快捷按钮：饥饿时显示食物按钮，生命低时显示药品按钮
+  const qf=document.getElementById('quickFood');
+  if(qf)qf.style.display=(G.hunger<50&&G.backpack.some(b=>b.type==='food'&&b.effects.hunger))?'block':'none';
+  const qm=document.getElementById('quickMed');
+  const needTemp=G.temperature<25||G.temperature>75;
+  const needHealth=G.health<50;
+  const hasTempMed=G.backpack.some(b=>b.type==='medicine'&&b.effects.temperature);
+  const hasHealthMed=G.backpack.some(b=>b.type==='medicine'&&b.effects.health);
+  if(qm)qm.style.display=((needTemp&&hasTempMed)||(needHealth&&hasHealthMed))?'block':'none';
+  const qt=document.getElementById('quickTemp');
+  if(qt)qt.style.display=(needTemp&&hasTempMed)?'block':'none';
+
+  const bonus=[0,2,5,10][G.shelterLv];
+  el('restSub').textContent=`恢复${10+bonus}生命`;
+
+  const bpTotal=G.backpack.reduce((s,b)=>s+b.quantity,0);
+  const badge=el('backpackBadge');
+  if(bpTotal>0){badge.textContent=bpTotal;badge.classList.add('show');}else badge.classList.remove('show');
+  el('backpackSub').textContent=bpTotal>0?`${bpTotal}件`:'空';
+
+  // 日志
+  const lc=el('logContainer');
+  lc.innerHTML=G.log.slice(-15).map(e=>`<div class="log-entry ${e.type}">${e.msg}</div>`).join('');
+  const lp=el('logPanel');lp.scrollTop=lp.scrollHeight;
+
+  // 天气（索引安全）
+  const w=WEATHERS[clamp(G.weather,0,WEATHERS.length-1)];
+  el('weatherIcon').textContent=w.icon;
+  el('weatherName').textContent=w.name;
+  el('weatherMod').textContent=w.tempMod>0?`+${w.tempMod}°C`:w.tempMod===0?'±0°C':`${w.tempMod}°C`;
+
+  // 状态标签
+  const st=el('statusTag');
+  if(G.heatStroke){st.textContent='🔥 中暑';st.className='status-tag heatstroke';}
+  else if(G.cold){st.textContent='🥶 感冒';st.className='status-tag cold';}
+  else{st.textContent='✓ 健康';st.className='status-tag ok';}
+
+  renderForest();
+}
+
+function updateCarbonDisplay(){
+  const el=document.getElementById('carbonDisplay');
+  if(!el||!G)return;
+  const c=isNaN(G.carbon)?0:G.carbon;
+  if(c<100)el.innerHTML=Math.floor(c)+'<span class="decimal">.'+String(Math.floor(Math.abs((c%1))*10))+'</span>';
+  else el.textContent=Math.floor(c);
+  const mc=document.getElementById('modalCarbon');if(mc)mc.textContent=Math.floor(c);
+  const rate=carbonRatePerSecond();
+  const cr=document.getElementById('carbonRate');if(cr)cr.textContent=`+${rate.toFixed(1)}/秒`;
+}
+
+function setBar(id,val,colored){
+  const el=document.getElementById(id);if(!el)return;
+  const p=Math.max(0,Math.min(100,val));el.style.width=p+'%';
+  if(colored){el.className='fill';if(p<=15)el.classList.add('critical');else if(p<=30)el.classList.add('danger');else if(p<=50)el.classList.add('warning');}
+}
+
+function renderForest(){
+  const g=document.getElementById('forestGrid');
+  if(G.trees.length===0){g.innerHTML='<span style="color:#4a6a4a;font-size:11px;">🌫️ 荒地</span>';return;}
+  const d=G.trees.slice(-48);
+  let h='';
+  d.forEach(t=>{
+    if(t.mature)h+='<span class="tree mature">🌲</span>';
+    else if(t.progress>=2)h+='<span class="tree growing2">🌿</span>';
+    else if(t.progress>=1)h+='<span class="tree growing1">🌱</span>';
+    else h+='<span class="tree sprout">🌰</span>';
+  });
+  if(G.trees.length>48)h+=`<span style="color:#4a6a4a;font-size:10px;">+${G.trees.length-48}</span>`;
+  g.innerHTML=h;
+}
+
+function animatePlant(count){
+  const g=document.getElementById('forestGrid');const trees=g.querySelectorAll('.tree');
+  const start=Math.max(0,trees.length-count);
+  for(let i=start;i<trees.length;i++){trees[i].classList.add('tree-plant-fx');trees[i].style.animationDelay=((i-start)*0.08)+'s';}
+}
+function animateDestroy(count){
+  const g=document.getElementById('forestGrid');const trees=g.querySelectorAll('.tree');
+  const n=Math.min(count,trees.length);
+  for(let i=0;i<n;i++){trees[trees.length-1-i].classList.add('tree-destroy-fx');}
+}
+
+// =========================================================
+// Canvas 场景绘制
+// =========================================================
+const canvas=document.getElementById('sceneCanvas');
+const ctx=canvas.getContext('2d');
+let cW=0,cH=0;
+
+function resizeCanvas(){
+  const rect=document.querySelector('.scene-panel').getBoundingClientRect();
+  const dpr=window.devicePixelRatio||1;
+  cW=rect.width;cH=rect.height;
+  canvas.width=cW*dpr;canvas.height=cH*dpr;
+  canvas.style.width=cW+'px';canvas.style.height=cH+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+
+const CX=0.5,GR=0.82;
+function gY(){return cH*GR;}
+function cX(){return cW*CX;}
+
+// roundRect polyfill
+if(!CanvasRenderingContext2D.prototype.roundRect){
+  CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
+    if(r>x+w)r=x+w/2;
+    this.moveTo(x+r,y);this.lineTo(x+w-r,y);
+    this.quadraticCurveTo(x+w,y,x+w,y+r);
+    this.lineTo(x+w,y+h-r);
+    this.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    this.lineTo(x+r,y+h);
+    this.quadraticCurveTo(x,y+h,x,y+h-r);
+    this.lineTo(x,y+r);
+    this.quadraticCurveTo(x,y,x+r,y);
+    return this;
+  };
+}
+
+// 天气粒子系统
+let particles=[];
+
+function spawnWeatherParticles(wx,count,time){
+  const weather=WEATHERS[G.weather];
+  // 移动端减少粒子数量
+  const mobileMultiplier=isMobile?0.35:1;
+  const intensity=(G.trees.length>0?1.2:1)*mobileMultiplier;
+  for(let i=0;i<count*intensity;i++){
+    if(weather.id==='rainy'||weather.id==='stormy'){
+      const extra=weather.id==='stormy'?2:1;
+      if(i%extra===0)particles.push({x:rand(0,cW),y:rand(-cH*0.5,0),vx:-2+Math.sin(time+rand(0,100))*0.5,vy:5+rand(2,8),life:1,type:'rain'});
+    }
+    if(weather.id==='stormy'){
+      if(Math.random()<0.2)particles.push({x:rand(0,cW),y:rand(-cH,0),vx:-10+rand(-3,3),vy:3+rand(0,4),life:1,type:'leaf'});
+    }
+    if(weather.id==='coldwave'){
+      for(let s=0;s<3;s++)particles.push({x:rand(0,cW),y:rand(-cH,0),vx:-0.5+Math.random()*1,vy:0.5+Math.random()*2,life:1+Math.random()*0.5,type:'snow'});
+    }
+    if(weather.id==='heatwave'){
+      if(Math.random()<0.3)particles.push({
+        x:rand(0,cW)*0.8+cW*0.1,y:rand(0,cH*0.4),
+        vx:(Math.random()-0.5)*0.8,vy:-0.2-Math.random()*0.4,
+        life:0.8+Math.random()*0.4,type:'shimmer'
+      });
+    }
+    if(weather.id==='sunny'){
+      if(Math.random()<0.05&&G.trees.filter(t=>t.mature).length>0){
+        particles.push({
+          x:rand(0,cW),y:rand(0,cH*0.3),
+          vx:(Math.random()-0.5)*0.3,vy:0.2+Math.random()*0.3,
+          life:1,type:'pollen'
+        });
+      }
+    }
+  }
+  particles=particles.filter(p=>p.life>0);
+}
+
+function updateParticles(){
+  particles.forEach(p=>{
+    p.x+=p.vx||0;p.y+=p.vy||0;
+    p.life-=0.016;
+    if(p.type==='rain')p.vy+=0.3;
+    if(p.type==='snow'){p.vx+=Math.sin(p.y*0.01)*0.05;p.vy+=0.05;}
+  });
+  particles=particles.filter(p=>p.life>0&&p.y<cH+20);
+}
+
+function drawParticles(){
+  particles.forEach(p=>{
+    if(p.type==='rain'){
+      ctx.strokeStyle=`rgba(150,180,255,${p.life*0.4})`;ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x+p.vx*3,p.y+p.vy*3);ctx.stroke();
+    }else if(p.type==='snow'){
+      ctx.fillStyle=`rgba(200,220,255,${p.life*0.5})`;
+      ctx.beginPath();ctx.arc(p.x,p.y,1.5+Math.sin(p.y)*0.5,0,Math.PI*2);ctx.fill();
+    }else if(p.type==='leaf'){
+      ctx.fillStyle=`rgba(80,120,60,${p.life*0.4})`;
+      ctx.beginPath();ctx.ellipse(p.x,p.y,3,1.5,p.x*0.01,0,Math.PI*2);ctx.fill();
+    }else if(p.type==='shimmer'){
+      ctx.fillStyle=`rgba(255,200,100,${p.life*0.15*Math.sin(p.x*0.1+p.y*0.1)})`;
+      ctx.beginPath();ctx.arc(p.x,p.y,3+Math.sin(p.x)*1.5,0,Math.PI*2);ctx.fill();
+    }
+  });
+}
+
+// 主绘制 — 增强版
+function drawScene(time){
+  if(!G||cW===0)return;
+  const w=cW,h=cH,gy=gY(),cx=cX(),now=time/1000;
+  const greenLevel=Math.min(1,G.trees.length/60);
+  const weather=WEATHERS[G.weather];
+  const mature=G.trees.filter(t=>t.mature).length;
+
+  // 天气色调
+  let tintR=0,tintG=0,tintB=0;
+  if(weather.id==='rainy'||weather.id==='stormy'){tintB=20;tintG=-8;tintR=-5;}
+  if(weather.id==='heatwave'){tintR=25;tintG=8;}
+  if(weather.id==='coldwave'){tintB=30;tintR=-15;tintG=-5;}
+
+  // 天空
+  const skyTop=adjustColor('#1a0a0a',tintR,tintG,tintB);
+  const skyBot=adjustColor(greenLevel>0.3?'#2a2a1a':'#2a1a0a',tintR,tintG,tintB);
+  const grad=ctx.createLinearGradient(0,0,0,gy*0.8);
+  grad.addColorStop(0,skyTop);grad.addColorStop(1,skyBot);
+  ctx.fillStyle=grad;ctx.fillRect(0,0,w,gy*0.85);
+
+  // 星星/浮尘
+  ctx.fillStyle='rgba(180,160,120,0.06)';
+  for(let i=0;i<15;i++){
+    const sx=(i*173.5+now*3*(i%3+1))%w;
+    const sy=(i*67.3)%(gy*0.5);
+    const twinkle=0.5+Math.sin(now*2+i*1.3)*0.5;
+    ctx.globalAlpha=twinkle*0.4;
+    ctx.beginPath();ctx.arc(sx,sy,1+Math.sin(now*2+i)*0.5,0,Math.PI*2);ctx.fill();
+  }
+  ctx.globalAlpha=1;
+
+  // 远山
+  ctx.fillStyle=adjustColor('#1a1a10',tintR*0.5,tintG*0.5,tintB*0.5);
+  ctx.beginPath();ctx.moveTo(0,gy*0.6);
+  for(let x=0;x<=w;x+=8)ctx.lineTo(x,gy*0.6+gy*0.1*Math.sin(x*0.005)+gy*0.05*Math.sin(x*0.012)+gy*0.08*Math.sin(x*0.003+1));
+  ctx.lineTo(w,gy*0.85);ctx.lineTo(0,gy*0.85);ctx.closePath();ctx.fill();
+  ctx.fillStyle=adjustColor('#1e1e14',tintR*0.3,tintG*0.3,tintB*0.3);
+  ctx.beginPath();ctx.moveTo(0,gy*0.7);
+  for(let x=0;x<=w;x+=6)ctx.lineTo(x,gy*0.7+gy*0.06*Math.sin(x*0.008+2)+gy*0.04*Math.sin(x*0.015+1));
+  ctx.lineTo(w,gy*0.85);ctx.lineTo(0,gy*0.85);ctx.closePath();ctx.fill();
+
+  // 地面
+  const grn=Math.round(40+greenLevel*60),brn=Math.round(50-greenLevel*25);
+  ctx.fillStyle=`rgb(${brn+tintR*0.3},${grn+tintG*0.3},${Math.round(20+greenLevel*15)+tintB*0.3})`;
+  ctx.fillRect(0,gy,w,h-gy);
+
+  // 草地细节
+  if(greenLevel>0.05){
+    for(let i=0;i<Math.round(8+greenLevel*40);i++){
+      const gx=cx+(Math.sin(i*37.1)*80)-40,gyy=gy-2-Math.sin(i*53.7)*6;
+      const gh=3+Math.sin(i*27.3+now*2)*2+greenLevel*5;
+      ctx.strokeStyle=`rgba(60,${Math.round(130+greenLevel*90)},40,${0.1+greenLevel*0.35})`;
+      ctx.lineWidth=1.2;
+      ctx.beginPath();ctx.moveTo(gx,gyy);
+      ctx.quadraticCurveTo(gx+Math.sin(now+i)*2.5,gyy-gh,gx+Math.sin(now*1.3+i)*1.5,gyy-gh-1);
+      ctx.stroke();
+    }
+  }
+
+  // 树（动态生长 + 多层树冠 — 移动端限制渲染数量）
+  const maxRenderTrees=isMobile?18:30;
+  const totalTrees=G.trees.length;
+  const treeStep=totalTrees>maxRenderTrees?Math.ceil(totalTrees/maxRenderTrees):1;
+  const matureCountForSway=G.trees.filter(tr=>tr.mature).length; // 缓存成熟数量
+  let renderIdx=0;
+  for(let t=0;t<totalTrees&&renderIdx<maxRenderTrees;t+=treeStep,renderIdx++){
+    const side=renderIdx%2===0?-1:1;
+    const tx=cx+side*(38+Math.sin(renderIdx*2.7)*35)+Math.cos(renderIdx*1.3)*20;
+    const sway=Math.sin(now*0.6+renderIdx*0.7)*(2.5+matureCountForSway*0.02);
+    const tt=tx+sway,ty=gy-2;
+    const isMature=G.trees[t].mature;
+    const progress=G.trees[t].progress;
+    const treeIdx=renderIdx;
+
+    if(isMature){
+      // 成熟树 — 大而茂盛
+      const s=1.5+Math.sin(renderIdx*0.9)*0.4;
+      // 树干
+      ctx.fillStyle='#5a3a1a';ctx.fillRect(tt-2.5*s,ty-18*s,5*s,18*s);
+      // 底部树冠（深色）
+      ctx.fillStyle=`rgb(${40+Math.round(greenLevel*50)},${130+Math.round(greenLevel*70)},${50})`;
+      ctx.beginPath();ctx.arc(tt,ty-22*s,13*s+sway*0.15,0,Math.PI*2);ctx.fill();
+      // 中部树冠（亮色）
+      ctx.fillStyle=`rgb(${60+Math.round(greenLevel*40)},${160+Math.round(greenLevel*60)},${60})`;
+      ctx.beginPath();ctx.arc(tt-2*s,ty-26*s,10*s+sway*0.12,0,Math.PI*2);ctx.fill();
+      // 高光
+      ctx.fillStyle='rgba(140,240,120,0.12)';
+      ctx.beginPath();ctx.arc(tt-4*s,ty-30*s,5*s,0,Math.PI*2);ctx.fill();
+      // 碳汇粒子闪烁（成熟树发光）
+      const glow=0.06+Math.sin(now*1.5+treeIdx*2.3)*0.04;
+      ctx.fillStyle=`rgba(74,222,128,${glow})`;
+      ctx.beginPath();ctx.arc(tt-3*s+Math.sin(now*2+treeIdx)*6,ty-28*s+Math.cos(now*1.7+treeIdx)*4,3+Math.sin(now*3+treeIdx),0,Math.PI*2);
+      ctx.fill();
+    }else if(progress>=2){
+      // 生长中 — 中等大小
+      const s=1.1+Math.sin(renderIdx*0.9)*0.3;
+      ctx.fillStyle='#4a3a1a';ctx.fillRect(tt-1.8*s,ty-12*s,3.6*s,12*s);
+      ctx.fillStyle='#5a8a3a';
+      ctx.beginPath();ctx.arc(tt,ty-16*s,9*s+sway*0.1,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#6a9a4a';
+      ctx.beginPath();ctx.arc(tt-1.5*s,ty-18*s,6*s+sway*0.08,0,Math.PI*2);ctx.fill();
+    }else if(progress>=1){
+      // 小苗 — 小树
+      const s=0.7+Math.sin(renderIdx*0.9)*0.2;
+      ctx.fillStyle='#3a2a1a';ctx.fillRect(tt-1.2*s,ty-7*s,2.4*s,7*s);
+      ctx.fillStyle='#5a7a3a';
+      ctx.beginPath();ctx.arc(tt,ty-10*s,6*s+sway*0.08,0,Math.PI*2);ctx.fill();
+    }else{
+      // 新芽 — 极小
+      ctx.fillStyle='#4a6a2a';
+      ctx.beginPath();ctx.arc(tt,ty-5,3.5,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#5a8a3a';
+      ctx.beginPath();ctx.arc(tt-1,ty-6.5,2.5,0,Math.PI*2);ctx.fill();
+    }
+  }
+
+  // 住所 — 增强特效版（建造动画 + 动态细节）
+  if(G.shelterLv>0){
+    const sx=cx+55,sy=gy-6;
+    const buildElapsed=(performance.now()-sceneAnim.shelterBuildTime)/1000;
+    const buildingUp=sceneAnim.shelterBuildTime>0&&buildElapsed<2;
+    const buildProgress=buildingUp?Math.min(1,buildElapsed/1.5):1;
+
+    // 🏗️ 建造动画（脚手架 + 粒子）
+    if(buildingUp){
+      for(let i=0;i<8;i++){
+        const angle=i*Math.PI/4+now;
+        const r=8+buildProgress*12;
+        const px=sx+Math.cos(angle)*r;
+        const py=sy-10+Math.sin(angle)*r*0.5;
+        ctx.fillStyle=`rgba(200,180,100,${0.2*(1-buildProgress)})`;
+        ctx.fillRect(px-1,py-1,2,2);
+      }
+      ctx.strokeStyle=`rgba(200,180,100,${0.12*(1-buildProgress)})`;
+      ctx.lineWidth=0.5;
+      ctx.strokeRect(sx-22,sy-28,44,28);
+      ctx.strokeRect(sx-18,sy-24,36,24);
+    }
+
+    ctx.save();
+    // 建造时弹入缩放
+    if(buildingUp){
+      const scale=Math.min(1,buildProgress*1.2);
+      ctx.translate(sx,sy);
+      ctx.scale(scale,scale);
+      ctx.translate(-sx,-sy);
+    }
+
+    if(G.shelterLv===1){
+      // ⛺ 简易帐篷 — 三角帐篷 + 风动摇曳 + 暖光
+      const sway=Math.sin(now*1.2)*1.5;
+      ctx.fillStyle='#4a6a3a';
+      ctx.beginPath();
+      ctx.moveTo(sx-16+sway*0.3,sy);
+      ctx.lineTo(sx,sy-22+sway*0.5);
+      ctx.lineTo(sx+16+sway*0.3,sy);
+      ctx.closePath();ctx.fill();
+      ctx.strokeStyle='#3a5a2a';ctx.lineWidth=1.5;ctx.stroke();
+      // 帐篷开口
+      ctx.fillStyle='#1a2a1a';
+      ctx.beginPath();ctx.moveTo(sx-5,sy);ctx.lineTo(sx-3,sy-10);ctx.lineTo(sx+3,sy-10);ctx.lineTo(sx+5,sy);
+      ctx.closePath();ctx.fill();
+      // 内部暖光（呼吸）
+      const warm=0.06+Math.sin(now*2)*0.04;
+      ctx.fillStyle=`rgba(255,200,100,${warm})`;
+      ctx.beginPath();ctx.moveTo(sx-4,sy-2);ctx.lineTo(sx,sy-10);ctx.lineTo(sx+4,sy-2);ctx.closePath();ctx.fill();
+      // 顶旗
+      ctx.fillStyle='#6a8a5a';
+      ctx.beginPath();ctx.moveTo(sx,sy-22);ctx.lineTo(sx+6+Math.sin(now*3)*2,sy-22);
+      ctx.lineTo(sx+3+Math.sin(now*3),sy-25);ctx.closePath();ctx.fill();
+      // 拉线
+      ctx.strokeStyle='rgba(200,180,100,0.12)';ctx.lineWidth=0.5;
+      ctx.beginPath();ctx.moveTo(sx-16,sy);ctx.lineTo(sx-22+sway,sy+8);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(sx+16,sy);ctx.lineTo(sx+22+sway,sy+8);ctx.stroke();
+    }else if(G.shelterLv===2){
+      // 🏡 保温木屋 — 烟囱 + 暖窗 + 雪顶 + 光晕
+      ctx.fillStyle='#5a3a1a';ctx.fillRect(sx-18,sy-15,36,15);
+      ctx.fillStyle='#7a4a1a';
+      ctx.beginPath();ctx.moveTo(sx-22,sy-15);ctx.lineTo(sx,sy-28);ctx.lineTo(sx+22,sy-15);ctx.closePath();ctx.fill();
+      // 冬季积雪
+      const sn=getSeason(G.day);
+      if(sn.id==='winter'){
+        ctx.fillStyle='rgba(200,220,240,0.2)';
+        ctx.beginPath();ctx.moveTo(sx-20,sy-16);ctx.lineTo(sx,sy-27);ctx.lineTo(sx+20,sy-16);ctx.closePath();ctx.fill();
+      }
+      // 烟囱 + 烟雾粒子
+      ctx.fillStyle='#4a2a1a';ctx.fillRect(sx+8,sy-24,5,9);
+      for(let i=0;i<4;i++){
+        const st=now*0.8+i*0.5;
+        const spx=sx+10+Math.sin(st)*3;
+        const spy=sy-26-i*4-(st%3)*2;
+        const salpha=0.15-Math.min(0.12,(st%3)*0.05);
+        if(salpha>0){
+          ctx.fillStyle=`rgba(180,180,180,${salpha})`;
+          ctx.beginPath();ctx.arc(spx,spy,2+Math.sin(st)*0.5,0,Math.PI*2);ctx.fill();
+        }
+      }
+      // 门
+      ctx.fillStyle='#4a8a4a';ctx.fillRect(sx-3,sy-8,6,8);
+      ctx.fillStyle='rgba(255,200,100,0.05)';ctx.fillRect(sx-2,sy-7,4,6);
+      // 窗户发光 + 地面光晕
+      const winGlow=0.08+Math.sin(now*1.8)*0.05;
+      ctx.fillStyle=`rgba(255,200,100,${winGlow})`;
+      ctx.fillRect(sx-12,sy-12,5,5);ctx.fillRect(sx+7,sy-12,5,5);
+      ctx.fillStyle=`rgba(255,200,100,${winGlow*0.3})`;
+      ctx.fillRect(sx-13,sy-13,7,7);ctx.fillRect(sx+6,sy-13,7,7);
+      if(winGlow>0.08){
+        ctx.fillStyle=`rgba(255,200,100,${(winGlow-0.08)*0.15})`;
+        ctx.beginPath();ctx.ellipse(sx-9,sy,5+winGlow*5,2,0,0,Math.PI*2);ctx.fill();
+        ctx.beginPath();ctx.ellipse(sx+10,sy,5+winGlow*5,2,0,0,Math.PI*2);ctx.fill();
+      }
+    }else{
+      // 🌐 生态恒温舱 — 全息科技 + 旋转环 + 脉冲
+      ctx.fillStyle='#1a3a2a';ctx.beginPath();ctx.ellipse(sx,sy-10,24,18,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='rgba(60,200,180,0.06)';ctx.beginPath();ctx.ellipse(sx,sy-12,20,12,0,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='rgba(60,200,180,0.15)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.ellipse(sx,sy-10,24,18,0,0,Math.PI*2);ctx.stroke();
+      // 旋转数据环
+      const ringAngle=now*0.8;
+      ctx.strokeStyle='rgba(60,220,200,0.12)';ctx.lineWidth=0.8;ctx.setLineDash([4,6]);
+      ctx.beginPath();ctx.ellipse(sx+Math.cos(ringAngle)*3,sy-10+Math.sin(ringAngle)*2,26+Math.sin(ringAngle)*2,18+Math.cos(ringAngle)*2,ringAngle*0.3,0,Math.PI*2);ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.strokeStyle='rgba(60,200,220,0.08)';ctx.lineWidth=0.5;ctx.setLineDash([2,8]);
+      ctx.beginPath();ctx.ellipse(sx+Math.cos(ringAngle*0.7)*5,sy-10+Math.sin(ringAngle*0.7)*3,28,16,-ringAngle*0.2,0,Math.PI*2);ctx.stroke();
+      ctx.setLineDash([]);
+      // 核心光
+      const coreGlow=0.08+Math.sin(now*1.5)*0.06;
+      ctx.fillStyle=`rgba(60,220,200,${coreGlow})`;
+      ctx.beginPath();ctx.ellipse(sx,sy-12,10+Math.sin(now*2)*2,6+Math.cos(now*1.7)*1.5,0,0,Math.PI*2);ctx.fill();
+      // 脉冲光晕
+      ctx.fillStyle=`rgba(60,220,200,${0.03+Math.sin(now*2.5)*0.02})`;
+      ctx.beginPath();ctx.ellipse(sx,sy-10,30+Math.sin(now*3)*3,22+Math.cos(now*2.5)*2,0,0,Math.PI*2);ctx.fill();
+      // 全息数据点
+      for(let i=0;i<5;i++){
+        const da=i*1.256+now*0.5;
+        const dx=sx+Math.cos(da)*18+Math.sin(now*2+i)*2;
+        const dy=sy-10+Math.sin(da)*10+Math.cos(now*1.5+i)*1.5;
+        ctx.fillStyle=`rgba(100,255,220,${0.05+Math.sin(now*3+i)*0.03})`;
+        ctx.beginPath();ctx.arc(dx,dy,1.5+Math.sin(now*4+i)*0.5,0,Math.PI*2);ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+
+  // 防护
+  if(G.protectionLv>0){
+    const fx=cx-70,fy=gy-3;
+    if(G.protectionLv===1){
+      for(let i=0;i<5;i++){
+        ctx.fillStyle='#5a4a2a';
+        ctx.fillRect(fx+i*6-20,fy-10-i*1.8,3,10+i*1.8);
+      }
+    }else if(G.protectionLv===2){
+      for(let i=0;i<6;i++){
+        ctx.fillStyle='#5a5a5a';
+        ctx.fillRect(fx+i*5-24,fy-14-i*0.8,3,14+i*0.8);
+        ctx.strokeStyle='#6a6a6a';ctx.lineWidth=0.5;
+        ctx.strokeRect(fx+i*5-24,fy-14-i*0.8,3,14+i*0.8);
+      }
+    }else{
+      ctx.fillStyle='rgba(60,180,200,0.06)';ctx.beginPath();ctx.ellipse(fx-28,fy-8,30,18,0,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='rgba(60,180,200,0.2)';ctx.lineWidth=1;ctx.setLineDash([3,4]);
+      ctx.beginPath();ctx.ellipse(fx-28,fy-8,30,18,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+      // 能量脉冲
+      const pls=0.02+Math.sin(now*2.5)*0.015;
+      ctx.fillStyle=`rgba(60,200,220,${pls})`;
+      ctx.beginPath();ctx.ellipse(fx-28,fy-8,32+Math.sin(now*3)*2,19+Math.cos(now*2.5)*1.5,0,0,Math.PI*2);ctx.fill();
+    }
+  }
+
+  // 人物
+  drawCharacter(cx,gy,now);
+  ctx.fillStyle='rgba(0,0,0,0.15)';ctx.beginPath();ctx.ellipse(cx,gy+3,14,3,0,0,Math.PI*2);ctx.fill();
+
+  // === 特效层 ===
+
+  // 植树特效（增强）
+  if(sceneAnim.pose==='planting'){
+    const el=(performance.now()-sceneAnim.startTime)/1000;
+    if(el<1.2){
+      const p=Math.min(1,el/0.9);
+      // 树苗从地上弹出
+      const ts=p<0.4?p*2.5:(p<0.6?1:(1-p)*2.5);
+      const ty=gy-5-p*28;
+      // 树苗
+      ctx.fillStyle='#3a2a1a';ctx.fillRect(cx+20-1.2,ty,2.4,14);
+      // 树冠弹出
+      const crownSize=6*Math.min(1,p*1.8)*0.8;
+      const greenShade=Math.round(100+p*80);
+      ctx.fillStyle=`rgb(60,${greenShade},40)`;
+      ctx.beginPath();ctx.arc(cx+20,ty-6,crownSize,0,Math.PI*2);ctx.fill();
+      if(p>0.3){
+        ctx.fillStyle=`rgb(80,${Math.round(greenShade+30)},60)`;
+        ctx.beginPath();ctx.arc(cx+19,ty-7,crownSize*0.6,0,Math.PI*2);ctx.fill();
+      }
+      // 飞溅的泥土粒子
+      if(p<0.5){
+        for(let i=0;i<6;i++){
+          const a=i*1.05+now;const r=4+p*20;
+          const px=cx+20+Math.cos(a)*r;const py=ty+10+Math.sin(a)*r*0.3;
+          ctx.fillStyle=`rgba(90,60,30,${0.5*(1-p*1.5)})`;
+          ctx.beginPath();ctx.arc(px,py,1.5+Math.random()*0.5,0,Math.PI*2);ctx.fill();
+        }
+      }
+    }else sceneAnim.pose='idle';
+  }
+
+  // 回复特效
+  if(sceneAnim.pose==='healing'){
+    const el=(performance.now()-sceneAnim.startTime)/1000;
+    if(el<0.8){
+      for(let i=0;i<8;i++){
+        const a=now*3+i*1.2;const r=8+el*16;
+        const px=cx+Math.cos(a)*r;const py=gy-22-Math.sin(a)*r*0.5;
+        ctx.fillStyle=`rgba(100,255,100,${0.2*(1-el)})`;
+        ctx.beginPath();ctx.arc(px,py,1.5+el*2,0,Math.PI*2);ctx.fill();
+      }
+      // 十字特效
+      ctx.strokeStyle=`rgba(100,255,100,${0.2*(1-el)})`;
+      ctx.lineWidth=2;const cs=8+el*10;
+      ctx.beginPath();ctx.moveTo(cx-cs,gy-22);ctx.lineTo(cx+cs,gy-22);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(cx,gy-22-cs);ctx.lineTo(cx,gy-22+cs);ctx.stroke();
+    }else sceneAnim.pose='idle';
+  }
+
+  // 休息特效
+  if(sceneAnim.pose==='resting'){
+    const el=(performance.now()-sceneAnim.startTime)/1000;
+    if(el<0.7){
+      for(let i=0;i<4;i++){
+        const zx=cx-12+el*30-Math.sin(now*2+i*1.5)*5;
+        const zy=gy-32-i*6-el*10;
+        ctx.fillStyle=`rgba(255,255,200,${0.12*(1-el)})`;
+        ctx.font='10px sans-serif';ctx.fillText('💤',zx,zy);
+      }
+    }else sceneAnim.pose='idle';
+  }
+
+  // 野兽袭击特效（增强）
+  if(sceneAnim.beastFlash>0){
+    const intensity=sceneAnim.beastFlash;
+    // 红色闪烁
+    ctx.fillStyle=`rgba(255,0,0,${intensity*0.15})`;
+    ctx.fillRect(0,0,w,h);
+    // 顶部/底部红色边框
+    ctx.fillStyle=`rgba(255,50,0,${intensity*0.2})`;
+    ctx.fillRect(0,0,w,4+intensity*6);
+    ctx.fillRect(0,h-4-intensity*6,w,4+intensity*6);
+    // 爪痕效果
+    ctx.strokeStyle=`rgba(255,80,0,${intensity*0.15})`;
+    ctx.lineWidth=2;
+    for(let i=0;i<3;i++){
+      const ax=w*0.2+i*w*0.3+Math.sin(now+i)*10;
+      const ay=h*0.1+intensity*50;
+      ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(ax+15*intensity,ay+25*intensity);
+      ctx.lineTo(ax+5*intensity,ay+30*intensity);ctx.stroke();
+    }
+    sceneAnim.beastFlash-=0.02;
+    if(sceneAnim.beastFlash<0)sceneAnim.beastFlash=0;
+  }
+
+  // 碳汇指示
+  if(mature>0){
+    ctx.fillStyle=`rgba(74,222,128,${0.08+Math.sin(now*2)*0.04})`;
+    ctx.font='11px sans-serif';ctx.textAlign='center';
+    ctx.fillText(`⚡+${carbonRatePerSecond().toFixed(2)}/秒`,cx,gy+28);
+  }
+
+  // 如果受伤，显示受伤特效
+  if(sceneAnim.damageFlash>0){
+    ctx.fillStyle=`rgba(255,50,0,${sceneAnim.damageFlash*0.1})`;
+    ctx.fillRect(0,0,w,h);
+    sceneAnim.damageFlash-=0.03;
+    if(sceneAnim.damageFlash<0)sceneAnim.damageFlash=0;
+  }
+
+  // 树桩（被摧毁的树）
+  G.stumps.forEach((s,i)=>{
+    const side=i%2===0?-1:1;
+    const sx=cx+side*(30+Math.sin(i*3.1)*28)+Math.cos(i*1.7)*15;
+    const sy=gy-2;
+    const opacity=Math.min(1,s.turns/3)*0.5;
+    ctx.fillStyle=`rgba(60,40,20,${opacity})`;
+    ctx.fillRect(sx-1.5,sy-4,3,4);
+    ctx.fillStyle=`rgba(80,50,20,${opacity*0.6})`;
+    ctx.beginPath();ctx.arc(sx,sy-5,2.5+Math.sin(now+i)*0.3,0,Math.PI*2);ctx.fill();
+  });
+
+  // 季节色调覆盖
+  const season=getSeason(G.day);
+  if(season.id==='summer'){ctx.fillStyle='rgba(255,200,50,0.02)';ctx.fillRect(0,0,w,h);}
+  else if(season.id==='winter'){ctx.fillStyle='rgba(200,220,255,0.03)';ctx.fillRect(0,0,w,h);}
+  else if(season.id==='autumn'){ctx.fillStyle='rgba(255,180,50,0.015)';ctx.fillRect(0,0,w,h);}
+
+  // 昼夜循环（基于实时时间，30秒白天/30秒夜晚）
+  const cycleTime=now%60;
+  const nightAmount=cycleTime>30?Math.min(1,(cycleTime-30)/10):Math.max(0,(cycleTime-20)/10);
+  if(nightAmount>0){
+    ctx.fillStyle=`rgba(0,10,30,${nightAmount*0.12})`;
+    ctx.fillRect(0,0,w,h);
+    // 夜晚星光增强
+    if(nightAmount>0.5){
+      ctx.fillStyle=`rgba(180,200,255,${nightAmount*0.04})`;
+      for(let i=0;i<20;i++){
+        const sx=(i*173.5+now*0.2*(i%3+1))%w;
+        const sy=(i*67.3)%(gy*0.4);
+        ctx.beginPath();ctx.arc(sx,sy,0.5+Math.sin(now+i)*0.5,0,Math.PI*2);ctx.fill();
+      }
+    }
+  }
+  // 更新昼夜指示器
+  const dn=document.getElementById('daynightInd');
+  if(dn)dn.textContent=nightAmount>0.5?'🌙':'☀️';
+
+  // 粒子
+  spawnWeatherParticles(weather,1,now);
+  updateParticles();
+  drawParticles();
+}
+
+function adjustColor(hex,r,g,b){
+  const m=parseInt(hex.slice(1),16);
+  let R=(m>>16)+r,Gv=(m>>8&0xFF)+g,Bv=(m&0xFF)+b;
+  return `rgb(${clamp(R,0,255)},${clamp(Gv,0,255)},${clamp(Bv,0,255)})`;
+}
+
+// 角色绘制 — 增强版
+function drawCharacter(x,gy,time){
+  const now=time;
+  const ae=sceneAnim.pose!=='idle'?(performance.now()-sceneAnim.startTime)/1000:0;
+  let lean=0,armR=0,armL=0,bodyH=38,knee=0,hY=0,armY=0,headTilt=0;
+  switch(sceneAnim.pose){
+    case'planting':{
+      const p=Math.min(1,ae/0.9);
+      lean=p*0.25;
+      armR=-p*1.4;if(p>0.4)armR=-(0.6-p*0.5)*1.2;
+      armL=-p*0.3;
+      knee=p*7;hY=p*3;bodyH=38-p*5;armY=p*4;
+      headTilt=p*0.12;
+      break;
+    }
+    case'healing':{
+      const p=Math.min(1,ae/0.7);
+      armR=-0.5-p*0.8;armL=-0.2-p*0.4;
+      hY=-p*3;headTilt=-p*0.08;
+      bodyH=38+p*2;
+      break;
+    }
+    case'resting':{
+      const p=Math.min(1,ae/0.5);
+      knee=p*15;lean=p*0.15;bodyH=38-p*10;hY=p*7;armR=p*0.2;armL=-p*0.2;
+      headTilt=p*0.2;
+      break;
+    }
+    case'beast':{
+      const p=Math.min(1,ae/0.6);
+      const bounce=Math.sin(now*12)*p*3;
+      knee=p*6+bounce;lean=p*0.15*Math.sin(now*8);hY=p*4;
+      armR=0.8*p*Math.sin(now*10);armL=-0.6*p*Math.sin(now*10+1);
+      headTilt=p*0.15*Math.sin(now*9);
+      bodyH=38-p*3;
+      break;
+    }
+    default:{
+      const b=Math.sin(now*1.8);
+      hY=b*2.0;bodyH=38+b*1.2;
+      const ba=Math.sin(now*1.3);
+      armR=ba*0.08;armL=-ba*0.08;
+      knee=Math.sin(now*1.5)*0.5;
+      // 眨眼
+      if(G&&(now%4>3.92))headTilt=0.02;
+    }
+  }
+  ctx.save();ctx.translate(x,gy-3);if(lean)ctx.rotate(lean);
+  const skin='#d4a574',hair='#5c3a1e',coat='#3a6a3a',pants='#4a4a2a',boot='#3a2a1a',scarf='#8a3a3a',
+        coatDark='#2a5a2a',glove='#4a3a2a';
+  ctx.strokeStyle=pants;ctx.lineWidth=3.5;ctx.lineCap='round';
+  // 腿部（动态）
+  const ls=Math.sin(now*1.5+knee*0.3)*2.5;
+  ctx.beginPath();ctx.moveTo(-5,-bodyH+2);ctx.lineTo(-7-ls+knee*0.3,-bodyH+20+knee);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(5,-bodyH+2);ctx.lineTo(7+ls-knee*0.3,-bodyH+20+knee);ctx.stroke();
+  ctx.fillStyle=boot;ctx.fillRect(-10,-bodyH+18+knee,7,3.5);ctx.fillRect(4,-bodyH+18+knee,7,3.5);
+  // 身体
+  ctx.fillStyle=coat;ctx.beginPath();ctx.roundRect(-10,-bodyH,20,bodyH-3,2.5);ctx.fill();
+  ctx.fillStyle=coatDark;ctx.fillRect(-10,-bodyH+bodyH-4,20,2.5);
+  // 背包带
+  ctx.strokeStyle='#3a2a1a';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(-4,-bodyH+5);ctx.lineTo(-8,-bodyH+bodyH-8);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(4,-bodyH+5);ctx.lineTo(8,-bodyH+bodyH-8);ctx.stroke();
+  // 左臂（带动态挥动）
+  ctx.strokeStyle=coat;ctx.lineWidth=3;
+  const lx=-10,ly=-bodyH+5+armY;
+  const lax=lx+Math.cos(Math.PI*0.5+armL)*12;
+  const lay=ly-Math.sin(Math.PI*0.5+armL)*12;
+  ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(lax,lay);ctx.stroke();
+  ctx.fillStyle=glove;ctx.beginPath();ctx.arc(lax,lay,2.5,0,Math.PI*2);ctx.fill();
+  // 右臂
+  const rx=10,ry=-bodyH+5+armY;
+  const rax=rx+Math.cos(Math.PI*0.5+armR)*14;
+  const ray=ry-Math.sin(Math.PI*0.5+armR)*14;
+  ctx.beginPath();ctx.moveTo(rx,ry);ctx.lineTo(rax,ray);ctx.stroke();
+  ctx.fillStyle=glove;ctx.beginPath();ctx.arc(rax,ray,2.5,0,Math.PI*2);ctx.fill();
+  // 植树时右手拿树苗
+  if(sceneAnim.pose==='planting'&&ae<0.7){
+    const pp=Math.min(1,ae/0.6);
+    ctx.fillStyle='#3a2a1a';ctx.fillRect(rax-1,ray-6,2,6);
+    const gs=Math.round(100+pp*60);
+    ctx.fillStyle=`rgb(60,${gs},40)`;
+    ctx.beginPath();ctx.arc(rax,ray-7,3+pp*2,0,Math.PI*2);ctx.fill();
+  }
+  // 头部（带受伤倾斜）
+  const hx=0,hy=-bodyH-7+hY;
+  ctx.save();ctx.translate(hx,hy);if(headTilt)ctx.rotate(headTilt);
+  // 头发
+  ctx.fillStyle=hair;ctx.beginPath();ctx.arc(0,-1,8,0,Math.PI*2);ctx.fill();
+  // 脸
+  ctx.fillStyle=skin;ctx.beginPath();ctx.arc(0,1,7,0,Math.PI*2);ctx.fill();
+  // 眼睛（眨动）
+  const blink=now%4>3.92;
+  if(blink){
+    ctx.strokeStyle='#2a2a3a';ctx.lineWidth=1.2;
+    ctx.beginPath();ctx.moveTo(-5,-1);ctx.lineTo(-2,-1);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(3,-1);ctx.lineTo(6,-1);ctx.stroke();
+  }else{
+    ctx.fillStyle='#2a2a3a';ctx.fillRect(-5.5,-1.5,3.5,2.5);ctx.fillRect(2.5,-1.5,3.5,2.5);
+    ctx.fillStyle='rgba(100,200,255,0.2)';ctx.fillRect(-5,-0.5,2,0.8);ctx.fillRect(3,-0.5,2,0.8);
+  }
+  // 嘴（受伤时张嘴）
+  if(sceneAnim.pose==='beast'){
+    ctx.fillStyle='#3a1a1a';ctx.beginPath();ctx.arc(0.5,4,1.8,0,Math.PI);ctx.fill();
+  }else{
+    ctx.fillStyle='#8a5a4a';ctx.beginPath();ctx.arc(0.5,4,1.5,0,Math.PI);ctx.fill();
+  }
+  // 围巾
+  ctx.fillStyle=scarf;
+  const sw=Math.sin(now*2.5)*2.5+Math.sin(ae*3)*2;
+  ctx.beginPath();ctx.moveTo(-7,5);
+  ctx.quadraticCurveTo(-3+sw,12,0,7);
+  ctx.quadraticCurveTo(3+sw,14,7,5);
+  ctx.fill();
+  // 汗水/受伤标记
+  if(sceneAnim.pose==='beast'){
+    ctx.fillStyle='rgba(100,180,255,0.3)';
+    for(let i=0;i<3;i++){
+      const dx=-6+i*6+Math.sin(now*5+i)*2;
+      const dy=5+i*2+Math.cos(now*4+i)*1;
+      ctx.beginPath();ctx.arc(dx,dy,1,0,Math.PI*2);ctx.fill();
+    }
+  }
+  ctx.restore(); // head
+  ctx.restore(); // body
+}
+
+// =========================================================
+// 场景循环
+// =========================================================
+function sceneLoop(time){
+  if(!G)return;
+  if(!G.gameOver){
+    if(lastFrameTime===0)lastFrameTime=time;
+    const dt=(time-lastFrameTime)/1000;
+    lastFrameTime=time;
+    if(dt<0.5){realtimeUpdate(dt);updateCarbonDisplay();}
+  }
+  resizeCanvas();ctx.clearRect(0,0,cW,cH);drawScene(time);
+  const sec=Math.floor(time/1000);const min=Math.floor(sec/60)%60;const s=sec%60;
+  document.getElementById('realtimeClock').textContent=String(min).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  sceneLoopId=requestAnimationFrame(sceneLoop);
+}
+
+// =========================================================
+// 胜利 / Game Over
+// =========================================================
+function showVictory(byDay,byTree,isLegend){
+  const box=document.getElementById('gameoverBox');
+  box.className='go-box victory';
+  let title,reason,toast;
+  if(isLegend){title='🏆 传奇！绿色大帝！';reason='你不仅活了下来，更种植了1000棵树，成为末世的传奇！';toast='🏆 传奇成就达成！';}
+  else if(byDay&&byTree){title='🌳 双重大地复苏！';reason='你成功在末世中生存了100天，并种植了500棵树！大地重现生机！';toast='🎉 双重胜利！';}
+  else if(byDay){title='📅 时间见证！';reason='你成功在末世中生存了100天，用坚韧不拔的意志活了下来！';toast='🎉 达成100天！';}
+  else{title='🌲 绿色洪流！';reason=`你种植了500棵树，用绿色力量征服了末世！`;toast='🎉 种植500棵！';}
+  document.getElementById('goTitle').textContent=title;
+  document.getElementById('deathCause').textContent=reason;
+  showStats();
+  document.getElementById('gameoverOverlay').classList.add('open');
+  showToast('🏆',toast);
+}
+
+function showGameOver(cause){
+  const box=document.getElementById('gameoverBox');
+  box.className='go-box';
+  document.getElementById('goTitle').textContent='💀 末世陨落';
+  document.getElementById('deathCause').textContent=cause;
+  showStats();
+  document.getElementById('gameoverOverlay').classList.add('open');
+}
+
+function showStats(){
+  if(!G)return;
+  document.getElementById('finalDays').textContent=G.day;
+  document.getElementById('finalTrees').textContent=G.totalPlanted;
+  document.getElementById('finalCarbon').textContent=Math.floor(G.totalCarbonEarned||0);
+  document.getElementById('finalTool').textContent=TOOL_NAMES[G.toolLv]||'无';
+  document.getElementById('finalShelter').textContent=SHELTER_NAMES[G.shelterLv]||'无';
+  document.getElementById('finalProtect').textContent=PROTECT_NAMES[G.protectionLv]||'无';
+  // 详细统计
+  const sd=id=>document.getElementById(id);
+  sd('sdBeast').textContent=G._beastCount||0;
+  sd('sdTrees').textContent=G.trees.length;
+  sd('sdMaxForest').textContent=G.maxForest||G.trees.length;
+  const skillCount=G.skills?G.skills.length:0;
+  sd('sdSkills').textContent=skillCount+'/'+SKILLS.length;
+  const achCount=ACHIEVEMENTS.filter(a=>G[a.id]).length;
+  sd('sdAch').textContent=achCount+'/'+ACHIEVEMENTS.length;
+}
+
+function restartGame(){
+  document.getElementById('gameoverOverlay').classList.remove('open');
+  closeExchange();closeBackpack();
+  initGame();
+}
+
+// =========================================================
+// 键盘
+// =========================================================
+document.addEventListener('keydown',function(e){
+  if(G&&G.gameOver)return;
+  const ex=document.getElementById('exchangeModal').classList.contains('open');
+  const bp=document.getElementById('backpackModal').classList.contains('open');
+  if(ex){if(e.key==='Escape')closeExchange();else if(e.key==='1')switchCategory('food');else if(e.key==='2')switchCategory('shelter');else if(e.key==='3')switchCategory('medicine');else if(e.key==='4')switchCategory('tool');else if(e.key==='5')switchCategory('protection');return;}
+  if(bp){if(e.key==='Escape')closeBackpack();return;}
+  if(e.key==='1'||e.key==='q')actionPlant();else if(e.key==='2'||e.key==='w')openBackpack();else if(e.key==='3'||e.key==='e')openExchange();else if(e.key==='4'||e.key==='r')actionRest();else if(e.key==='Escape'){closeExchange();closeBackpack();}
+});
+document.getElementById('exchangeModal').addEventListener('click',function(e){if(e.target===this)closeExchange();});
+document.getElementById('backpackModal').addEventListener('click',function(e){if(e.target===this)closeBackpack();});
+
+// =========================================================
+// 初始化
+// =========================================================
+function initGame(){
+  G=defaultState();
+  G._beastTimer=0;
+  G._eventTimer=0;
+  G._carbonSoundCounter=0;
+  G._lastCarbonRate=undefined;
+  lastFrameTime=0;
+  _lastActionTime=0;
+  sceneAnim={pose:'idle',startTime:0,beastFlash:0,damageFlash:0,shelterBuildTime:0};
+  particles=[];
+  G.weather=0;G.weatherCounter=rand(2,5);
+  for(let i=0;i<5;i++)G.trees.push({progress:rand(1,2),mature:false});
+  addLog('🌍 第1天 — 废土据点中醒来','normal');
+  renderAll();
+  if(sceneLoopId)cancelAnimationFrame(sceneLoopId);
+  lastFrameTime=performance.now();sceneLoop(lastFrameTime);
+}
+
+let resizeTimer;
+window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if(canvas){resizeCanvas();if(G)renderAll();}},200);});
+
+// =========================================================
+// 微信/移动端特殊处理
+// =========================================================
+// 阻止微信长按菜单和选择
+document.addEventListener('contextmenu',function(e){e.preventDefault();});
+document.addEventListener('selectstart',function(e){e.preventDefault();});
+// 阻止微信下拉刷新（被动式）
+document.addEventListener('touchmove',function(e){
+  if(e.target.closest('.modal-overlay.open')||e.target.closest('.go-overlay.open')||
+     e.target.closest('.ui-panel'))return;
+  // 允许弹窗中滚动
+  if(e.target.closest('.log-panel')||e.target.closest('.modal')||
+     e.target.closest('.choice-box'))return;
+}, {passive:true});
+// 阻止微信双击缩放
+let _lastTouchEnd=0;
+document.addEventListener('touchend',function(e){
+  const now=Date.now();
+  if(now-_lastTouchEnd<=300)e.preventDefault();
+  _lastTouchEnd=now;
+},{passive:false});
+// 隐藏微信全屏按钮
+if(isWeChat){
+  const fsBtn=document.getElementById('fsBtn');
+  if(fsBtn)fsBtn.style.display='none';
+}
+
+// =========================================================
+// 从标题画面启动
+// =========================================================
+initTitleScreen();
+
+// =========================================================
+// PWA - Service Worker 注册（离线支持 + 可安装）
+// =========================================================
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('sw.js').then(function(reg){
+      console.log('[PWA] Service Worker 已注册:', reg.scope);
+    }).catch(function(err){
+      console.warn('[PWA] Service Worker 注册失败（离线功能不可用）:', err);
+    });
+  });
+}
+</script>
+</body>
+</html>
